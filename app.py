@@ -46,6 +46,11 @@ data_option = st.sidebar.radio(
     ("Option 1: Use Code-Embedded Transactions (20 Live Rows)", "Option 2: Upload My Custom Excel/CSV File")
 )
 
+# Authorship credits rendered directly below the selection widget
+st.sidebar.markdown("---")
+st.sidebar.caption("✒️ **Created by Srinivasta**")
+st.sidebar.caption("Automated Bookkeeping Data Solutions")
+
 df_master = None
 
 if data_option == "Option 1: Use Code-Embedded Transactions (20 Live Rows)":
