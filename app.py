@@ -56,8 +56,13 @@ if data_option == "Option 1: Use Code-Embedded Transactions (20 Live Rows)":
     df_master = pd.DataFrame(embedded_20_transactions)
     st.success(f"✅ Active: Running pipeline using your **Hardcoded Built-In Data Pool** ({len(df_master)} rows)")
 else:
-    uploaded_file = st.sidebar.file_uploader("Upload your custom transaction spreadsheet", type=["xlsx", "xls", "csv"])
+    # Wrapped in single quotes to allow internal quotes/Markdown links without syntax errors
+    uploaded_file = st.sidebar.file_uploader(
+        'Upload your custom transaction spreadsheet from [Kaggle Dataset](https://www.kaggle.com/datasets/engreemali/bank-transactions-sms-datasetss):', 
+        type=["xlsx", "xls", "csv"]
+    )
     if uploaded_file is not None:
+        # Proceed with file reading and processing logic
         # [THE MULTI-SHEET UPDATE] If it's an Excel file, parse individual worksheets dynamically
         if uploaded_file.name.endswith('.csv'):
             df_master = pd.read_csv(uploaded_file)
