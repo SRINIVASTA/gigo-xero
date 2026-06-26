@@ -30,7 +30,6 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
     
     valid_mask = df_working['pipeline_status'] == 'PENDING_UNSUPERVISED'
     if valid_mask.sum() < 3:
-        # Fallback if text sample sizes are too tiny to extract distinct shapes
         df_working['assigned_accounting_category'] = "General Ledger Adjustments"
         return df_working
         
@@ -38,13 +37,11 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
     vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words=custom_stop_words)
     X_matrix = vectorizer.fit_transform(df_working.loc[valid_mask, 'cleaned_tokens'])
     
-    # Safely compute number of clusters based on active unique tokens volume available
     num_clusters = min(4, valid_mask.sum())
     kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
     df_working.loc[valid_mask, 'discovered_cluster_id'] = kmeans.fit_predict(X_matrix)
     df_working['discovered_cluster_id'] = df_working['discovered_cluster_id'].fillna(-1).astype(int)
     
-    # Extract keyword tags from center weights
     feature_names = np.array(vectorizer.get_feature_names_out())
     cluster_centers = kmeans.cluster_centers_
     base_cluster_map = {}
@@ -66,7 +63,6 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
     df_working.loc[valid_mask, 'pipeline_status'] = 'CLUSTER_CONFIRMED'
     df_working.loc[valid_mask, 'assigned_accounting_category'] = df_working.loc[valid_mask, 'discovered_cluster_id'].map(base_cluster_map)
     
-    # Structural token fallback checker
     def evaluate_accounting_labels(row):
         if row['pipeline_status'] == 'REJECTED': return "System Excluded / Anomaly Noise"
         raw_text_upper = str(row['SMS']).upper()
