@@ -1,6 +1,6 @@
 # 📊 Unsupervised Xero ML Bookkeeping & Analytics Engine
 
-An production-grade **Anti-GIGO (Garbage In, Garbage Out)** financial data pipeline built with **Streamlit** and **Scikit-Learn**. This application automatically cleans, tokenizes, clusters, and parses unclassified bank SMS notification logs into clean, audit-ready bookkeeping spreadsheets ready for general ledger systems like Xero.
+A production-grade **Anti-GIGO (Garbage In, Garbage Out)** financial data pipeline built with **Streamlit** and **Scikit-Learn**. This application automatically cleans, tokenizes, clusters, and parses unclassified bank SMS notification logs into clean, audit-ready bookkeeping spreadsheets ready for general ledger systems like Xero.
 
 ---
 ✒️ **Created by Srinivasta**  
@@ -9,7 +9,7 @@ An production-grade **Anti-GIGO (Garbage In, Garbage Out)** financial data pipel
 
 ## 🚀 Key Architectural Features
 
-* **Insulated Anti-GIGO Protection Layers:** Instantly drops empty trailing cells, formatting gaps, and unparseable system errors, keeping garbage inputs completely isolated from machine learning weights.
+* **Insulated Anti-GIGO Protection Layers:** Instantly drops empty trailing cells, formatting gunk, and unparseable system errors, keeping garbage inputs completely isolated from machine learning weights.
 * **Dual-Option Data Ingestion Engine:** Contains an out-of-the-box hardcoded testing dataset (20 Live Rows) embedded directly inside the codebase, while providing seamless support for direct user browser drag-and-drop spreadsheets.
 * **Dynamic Multi-Sheet Excel Selector:** Automatically scans uploaded Excel files with multiple worksheets and exposes an active dropdown selection grid in your interface.
 * **Unsupervised Text Clustering Engine:** Vectorizes messy string syntax using TF-IDF bigrams and applies a 5-cluster K-Means topology routine to organically isolate spending trends.
@@ -29,6 +29,16 @@ To deploy this framework seamlessly to Streamlit Cloud, structure your files ins
 ├── 📄 requirements.txt                 # Manifest file tracking software package versions
 └── 📄 README.md                        # This project structural blueprint manual
 ```
+
+---
+
+## 💾 Production Test Dataset Source
+
+For full-scale volume stress testing (1,894+ transactions), download the live bank messaging data profile used to develop this application directly from Kaggle. 
+
+📥 **Official Dataset Link:** [Kaggle Bank Transactions SMS Datasets](https://kaggle.com)
+
+> 💡 **Multi-Sheet Architecture Note:** This dataset file natively features **7 distinct sheet variations** (e.g., `debit535 1896`, etc.). When uploaded to the interface, the app dynamically generates a sidebar dropdown selection grid, allowing you to instantly isolate and process any individual statement feed while automatically removing hidden trailing cell noise artifact boundaries.
 
 ---
 
