@@ -9,7 +9,7 @@ st.title("📊 Unsupervised Xero ML Bookkeeping & Analytics Engine")
 st.write("An anti-GIGO system designed to ingest, clean, and cluster unlabeled financial text notifications.")
 
 # -------------------------------------------------------------
-# 20 LIVE TRANSACTIONS HARDCODED DIRECTLY INSIDE THE SCRIPT
+# 20 EMBEDDED TRANSACTIONS CORES STORAGE
 # -------------------------------------------------------------
 embedded_20_transactions = {
     'ID': list(range(574063879905315000, 574063879905315020)),
@@ -49,24 +49,36 @@ data_option = st.sidebar.radio(
 df_master = None
 
 if data_option == "Option 1: Use Code-Embedded Transactions (20 Live Rows)":
-    # Instantly build dataframe straight out of hardcoded dictionary vectors
     df_master = pd.DataFrame(embedded_20_transactions)
     st.success(f"✅ Active: Running pipeline using your **Hardcoded Built-In Data Pool** ({len(df_master)} rows)")
 else:
     uploaded_file = st.sidebar.file_uploader("Upload your custom transaction spreadsheet", type=["xlsx", "xls", "csv"])
     if uploaded_file is not None:
-        df_master = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
-        st.success(f"📥 Active: Ingested browser custom file `{uploaded_file.name}` ({len(df_master)} rows)")
+        # [THE MULTI-SHEET UPDATE] If it's an Excel file, parse individual worksheets dynamically
+        if uploaded_file.name.endswith('.csv'):
+            df_master = pd.read_csv(uploaded_file)
+            st.success(f"📥 Active: Ingested CSV file `{uploaded_file.name}` ({len(df_master)} rows)")
+        else:
+            excel_file_object = pd.ExcelFile(uploaded_file)
+            sheet_names = excel_file_object.sheet_names
+            
+            # Show worksheet selection options box in UI sidebar
+            selected_sheet = st.sidebar.selectbox(
+                f"📄 Select worksheet to process ({len(sheet_names)} found):",
+                sheet_names
+            )
+            df_master = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
+            st.success(f"📥 Active: Processing Worksheet `{selected_sheet}` inside `{uploaded_file.name}` ({len(df_master)} rows)")
 
-# Execute system operations only if data container pointer variable holds state
+# Execute engine calculations only if data frames are populated
 if df_master is not None:
     if not all(col in df_master.columns for col in ['ID', 'SMS']):
-        st.error(f"❌ Schema Validation Failed! Column headers must match 'ID' and 'SMS' exactly. Found: {list(df_master.columns)}")
+        st.error(f"❌ Schema Validation Failed! Active worksheet layout columns must match 'ID' and 'SMS' exactly. Found: {list(df_master.columns)}")
+        st.info("💡 Recommendation: Check your other sheet variations using the selection dropdown in the sidebar.")
         st.stop()
         
     df_final = run_unsupervised_accounting_pipeline(df_master)
     
-    # Financial Numeric Float Value Parser Node
     def extract_currency_float(text):
         match = re.search(r'(?:AED|aed)\s*([\d,]+\.?\d*)', str(text))
         return float(match.group(1).replace(',', '')) if match else 0.0
@@ -74,7 +86,6 @@ if df_master is not None:
     df_confirmed = df_final[df_final['pipeline_status'] == 'CLUSTER_CONFIRMED'].copy()
     df_confirmed['parsed_amount'] = df_confirmed['SMS'].apply(extract_currency_float)
     
-    # Build metrics frames
     pivot_summary = df_confirmed.groupby('assigned_accounting_category').agg(
         transaction_count=('ID', 'count'),
         total_volume_aed=('parsed_amount', 'sum'),
