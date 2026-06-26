@@ -45,31 +45,6 @@ data_option = st.sidebar.radio(
     "Choose how you want to load data:",
     ("Option 1: Use Code-Embedded Transactions (20 Live Rows)", "Option 2: Upload My Custom Excel/CSV File")
 )
-# Highlight and present the Kaggle link directly when Option 2 is picked
-if "Option 2" in data_option:
-    st.sidebar.markdown(
-        "💡 **Step 1: Download the Template Dataset**  \n"
-        "Get the standard dataset directly from Kaggle below:"
-    )
-    
-    # Creates a clear, styled action button that automatically opens in a new tab
-    st.sidebar.link_button(
-        "📥 Go to Kaggle SMS Dataset", 
-        "https://www.kaggle.com/datasets/engreemali/bank-transactions-sms-datasetss",
-        use_container_width=True
-    )
-    
-    st.sidebar.markdown("---") # Visual separator
-    
-    # Step 2: Provide the file uploader for their downloaded file
-    uploaded_file = st.sidebar.file_uploader(
-        "📂 **Step 2: Upload your file**", 
-        type=["xlsx", "csv"]
-    )
-    
-    if uploaded_file is not None:
-        st.sidebar.success("File uploaded successfully! Starting process...")
-        # (Insert your parsing/processing function here)
 # Authorship credits rendered directly below the selection widget
 st.sidebar.markdown("---")
 st.sidebar.caption("✒️ **Created by Srinivasta**")
