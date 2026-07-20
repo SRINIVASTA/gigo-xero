@@ -1,10 +1,19 @@
-/* Custom Dashboard Framework Styles Overrides matching original image targets views */
+/* ==========================================================================
+   📊 Xero ML Automated Bookkeeper — Custom Dashboard Theme
+   ========================================================================== */
 
-/* Streamlit styling tweaks for table rows typography tracking heights properties */
-table {
-    border-spacing: 0;
+/* Forces panels with the hidden class to disappear completely */
+.hidden { 
+    display: none !important; 
 }
 
+/* Fixes the cell alignment inside the metrics and explorer tables */
+table {
+    border-spacing: 0;
+    width: 100%;
+}
+
+/* Styles alternating table rows for better readability */
 #spreadsheet-tbody tr:nth-child(even) {
     background-color: #f8f9fa;
 }
@@ -13,19 +22,23 @@ table {
     background-color: #f1f5f9;
 }
 
-/* Explicit line wraps definitions allowed strictly text blocks data grid rows */
+/* Prevents table columns from breaking or smashing together */
 #spreadsheet-tbody td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    vertical-align: middle;
 }
 
+/* Allows the raw text cell to wrap normally so you can read the whole message */
 #spreadsheet-tbody td:nth-child(3) {
     white-space: normal;
     word-break: break-word;
 }
 
-/* Custom scroll bar track layout optimization for the elements fields wrappers containers grids */
+/* ==========================================================================
+   🎨 Custom Scrollbar Styles for the Live Spreadsheet View
+   ========================================================================== */
 .overflow-y-auto::-webkit-scrollbar {
     width: 6px;
     height: 6px;
