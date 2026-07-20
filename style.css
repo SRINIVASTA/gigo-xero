@@ -1,11 +1,31 @@
-/* Custom App Overrides for Xero Bookkeeper Application Dashboard */
+/* Custom Dashboard Framework Styles Overrides matching original image targets views */
 
-/* 🚀 CRITICAL FIXED VISUAL RULE: Forces step hiding to work regardless of framework delays */
-.hidden { 
-    display: none !important; 
+/* Streamlit styling tweaks for table rows typography tracking heights properties */
+table {
+    border-spacing: 0;
 }
 
-/* Custom scroll bar track layout optimization for the Spreadsheet View grid */
+#spreadsheet-tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+#spreadsheet-tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Explicit line wraps definitions allowed strictly text blocks data grid rows */
+#spreadsheet-tbody td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#spreadsheet-tbody td:nth-child(3) {
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* Custom scroll bar track layout optimization for the elements fields wrappers containers grids */
 .overflow-y-auto::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -13,32 +33,13 @@
 
 .overflow-y-auto::-webkit-scrollbar-track {
     background: #f1f5f9;
-    border-radius: 4px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
     background: #cbd5e1;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
-}
-
-/* Forces fixed table alignment layout boundaries */
-table {
-    table-layout: fixed;
-    width: 100%;
-}
-
-th, td {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Unlocks textual line wrap only inside raw log cell elements fields */
-#spreadsheet-tbody td:nth-child(2) {
-    white-space: normal;
-    word-break: break-word;
 }
