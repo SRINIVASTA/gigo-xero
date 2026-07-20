@@ -1,5 +1,10 @@
 /* Custom App Overrides for Xero Bookkeeper Application Dashboard */
 
+/* 🚀 CRITICAL FIXED VISUAL RULE: Forces step hiding to work regardless of framework delays */
+.hidden { 
+    display: none !important; 
+}
+
 /* Custom scroll bar track layout optimization for the Spreadsheet View grid */
 .overflow-y-auto::-webkit-scrollbar {
     width: 6px;
