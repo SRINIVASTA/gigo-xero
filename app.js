@@ -1,14 +1,18 @@
 /**
  * 📊 Unsupervised Xero ML Bookkeeping Logic Pipeline Script
- * Created by Srinivasta for pure browser client execution
+ * Formatted perfectly matching target split screen dashboard layout view models
+ * PART 1: Core Setup, Data Listeners, and File Ingestion Engines
  */
 
-// Global state trackers variables configuration blocks
 let masterData = [];
-let myPieChart = null;
+let chartPieInstance = null;
+let chartBarInstance = null;
 
-// Built-In Framework Fallback Evaluation Arrays Data Store (20 Live Rows)
+// Embedded Cores Storage array matrix definitions containing 20 raw record lines data rows pool items
 const embeddedRows = [
+    "22-01-2019 14:02 Account *****535 has been created for you.",
+    "22-01-2019 14:03 Dear Customer, thank you for opening a new AED account with ADIB.",
+    "22-01-2019 15:29 Dear Customer, thank you for requesting a new chequebook for your account.",
     "05-03-2019 09:26 Dear Customer, AED 25806.50 was credited to your account ****0535.",
     "06-03-2019 22:52 Dear Customer, AED 12800.00 was debited from your account ****0535.",
     "08-03-2019 10:02 Trx. of AED 50.00 on your a/c ****0535 at ABU DHABI NATIONAL OIL.",
@@ -28,190 +32,211 @@ const embeddedRows = [
     "21-03-2019 08:55 Trx. of AED 22.00 on your a/c ****0535 at COSTA COFFEE DUBAI AE."
 ];
 
-// Event Listeners Initialization setup bindings
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('btn-load-embedded').addEventListener('click', loadEmbeddedData);
-    document.getElementById('csv-file-input').addEventListener('change', handleCsvUpload);
-    document.getElementById('btn-run-pipeline').addEventListener('click', executeMLPipeline);
-    document.getElementById('btn-reset-wizard').addEventListener('click', restartWizard);
-    document.getElementById('btn-download-csv').addEventListener('click', downloadCategorizedCSV);
-    switchView(1); // Set initial stage explicitly on boot setup
+    // Bind listeners targeting sidebar option radio components configurations switches
+    document.getElementById('radio-embedded').addEventListener('change', runEmbeddedPipeline);
+    document.getElementById('radio-upload').addEventListener('change', toggleUploadSection);
+    document.getElementById('csv-file-input').addEventListener('change', handleFileUploadStream);
+    document.getElementById('btn-download-csv').addEventListener('click', exportLedgerToCSVStream);
+    
+    // Auto execute default runtime initialization baseline
+    runEmbeddedPipeline();
 });
 
-// View Navigation Panel Switch State Controller Layout
-function switchView(stepNumber) {
-    const p1 = document.getElementById('panel-step-1');
-    const p2 = document.getElementById('panel-step-2');
-    const p3 = document.getElementById('panel-step-3');
-
-    // Force explicit toggle states using classList APIs
-    p1.classList.add('hidden');
-    p2.classList.add('hidden');
-    p3.classList.add('hidden');
-    
-    document.getElementById('step-badge-1').className = "text-sm font-semibold text-gray-400 pb-2";
-    document.getElementById('step-badge-2').className = "text-sm font-semibold text-gray-400 pb-2";
-    document.getElementById('step-badge-3').className = "text-sm font-semibold text-gray-400 pb-2";
-
-    if (stepNumber === 1) p1.classList.remove('hidden');
-    if (stepNumber === 2) p2.classList.remove('hidden');
-    if (stepNumber === 3) p3.classList.remove('hidden');
-    
-    document.getElementById(`step-badge-${stepNumber}`).className = `text-sm font-semibold text-blue-600 border-b-2 border-blue-600 pb-2`;
+function toggleUploadSection() {
+    const isUpload = document.getElementById('radio-upload').checked;
+    document.getElementById('upload-wrapper').style.display = isUpload ? 'block' : 'none';
 }
 
-function loadEmbeddedData() {
+function runEmbeddedPipeline() {
+    toggleUploadSection();
     masterData = embeddedRows.map((smsText, idx) => ({
         id: 574063879905315000 + idx,
         sms: smsText
     }));
-    switchView(2);
+    
+    document.getElementById('status-text').innerText = `Active: Running pipeline using your Hardcoded Built-In Data Pool (${masterData.length} rows)`;
+    calculateAndRenderDashboard();
 }
 
-function handleCsvUpload(e) {
-    const file = e.target.files;
+function handleFileUploadStream(e) {
+    const file = e.target.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = function(evt) {
         const lines = evt.target.result.split('\n').slice(1);
         masterData = lines.filter(l => l.trim().length > 5).map((line, idx) => {
-            const commaIdx = line.indexOf(',');
-            if (commaIdx === -1) return { id: 574063879905315000 + idx, sms: line.trim() };
-            const idPart = line.substring(0, commaIdx).replace(/["']/g, "").trim();
-            const smsPart = line.substring(commaIdx + 1).replace(/["']/g, "").trim();
-            return { id: idPart || (574063879905315000 + idx), sms: smsPart };
+            const splitIdx = line.indexOf(',');
+            if (splitIdx === -1) return { id: 574063879905315000 + idx, sms: line.trim() };
+            return {
+                id: line.substring(0, splitIdx).replace(/["']/g, "").trim(),
+                sms: line.substring(splitIdx + 1).replace(/["']/g, "").trim()
+            };
         });
-        switchView(2);
+        document.getElementById('status-text').innerText = `📥 Active: Ingested CSV file \`${file.name}\` (${masterData.length} rows)`;
+        calculateAndRenderDashboard();
     };
     reader.readAsText(file);
 }
 
-// Anti-GIGO Token Standardization Engine
-function cleanSmsString(text) {
+function cleanStringText(text) {
     let t = text.toUpperCase();
-    if (t.includes("CORRUPT") || t.includes("SYSTEM_ERR") || t.includes("TIMEOUT")) return "garbage_flag";
     t = t.replace(/TRX\./g, " ").replace(/TRX/g, " ").replace(/A\/C/g, " ");
     t = t.replace(/\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}/g, '');
     t = t.replace(/\d+\.\d+/g, '').replace(/\b\d+\b/g, '').replace(/\*/g, '');
     return t.toLowerCase().trim();
 }
 
-function extractCurrencyFloat(text) {
+function parseCurrencyFloatValue(text) {
     const match = text.match(/(?:AED|aed)\s*([\d,]+\.?\d*)/i);
     return match ? parseFloat(match[1].replace(/,/g, '')) : 0.0;
 }
+/**
+ * PART 2: Analytical Calculations Processing & UI Elements Population
+ * Paste this block directly below Block 1 inside your app.js file!
+ */
 
-// Processing Matrix Pipeline Implementation Core
-function executeMLPipeline() {
-    let categorySums = {
-        "Direct Cash Bank Credits": { count: 0, sum: 0 },
-        "Merchant Vendor Spending (Online)": { count: 0, sum: 0 },
-        "Merchant Vendor Spending (POS)": { count: 0, sum: 0 },
+function calculateAndRenderDashboard() {
+    // Exactly matches the dictionary mapping outputs metrics from your image target matrix
+    let ledgerMapMetrics = {
         "ATM Cash Withdrawals": { count: 0, sum: 0 },
         "Administrative Notification": { count: 0, sum: 0 },
-        "General Ledger Adjustments": { count: 0, sum: 0 }
+        "Direct Cash Bank Credits": { count: 0, sum: 0 },
+        "Direct Cash Bank Debits": { count: 0, sum: 0 },
+        "Merchant Vendor Spending": { count: 0, sum: 0 }
     };
 
-    const spreadsheetBody = document.getElementById('spreadsheet-tbody');
-    spreadsheetBody.innerHTML = '';
+    const spreadsheetTbody = document.getElementById('spreadsheet-tbody');
+    spreadsheetTbody.innerHTML = '';
 
-    masterData.forEach(item => {
-        const cleaned = cleanSmsString(item.sms);
-        const amt = extractCurrencyFloat(item.sms);
-        let category = "General Ledger Adjustments";
+    masterData.forEach((item, index) => {
+        let cleaned = cleanStringText(item.sms);
+        let amount = parseCurrencyFloatValue(item.sms);
+        let category = "Merchant Vendor Spending"; // Default sorting allocation target bucket
 
-        if (cleaned === "garbage_flag") {
-            category = "General Ledger Adjustments";
+        // Strategic categorical pipeline extraction mappings criteria matching rules logic parameters
+        if (cleaned.includes("created") || cleaned.includes("opening") || cleaned.includes("chequebook")) {
+            category = "Administrative Notification";
         } else if (cleaned.includes("credited") || cleaned.includes("received")) {
             category = "Direct Cash Bank Credits";
-        } else if (cleaned.includes("apple")) {
-            category = "Merchant Vendor Spending (Online)";
-        } else if (cleaned.includes("dhabi") || cleaned.includes("national oil")) {
-            category = "Merchant Vendor Spending (POS)";
-        } else if (cleaned.includes("atm") || cleaned.includes("withdrawal")) {
+        } else if (cleaned.includes("debited") && (cleaned.includes("withdrawal") || cleaned.includes("atm"))) {
             category = "ATM Cash Withdrawals";
-        } else if (cleaned.includes("created") || cleaned.includes("chequebook") || cleaned.includes("opening")) {
-            category = "Administrative Notification";
+        } else if (cleaned.includes("debited")) {
+            category = "Direct Cash Bank Debits";
+        } else if (cleaned.includes("trx") || cleaned.includes("order") || cleaned.includes("cafe") || cleaned.includes("supermarket") || cleaned.includes("online") || cleaned.includes("coffee")) {
+            category = "Merchant Vendor Spending";
         }
 
         item.assignedCategory = category;
 
-        if (categorySums[category]) {
-            categorySums[category].count += 1;
-            categorySums[category].sum += amt;
+        if (ledgerMapMetrics[category]) {
+            ledgerMapMetrics[category].count += 1;
+            ledgerMapMetrics[category].sum += amount;
         }
 
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 border-b border-gray-100";
-        tr.innerHTML = `
-            <td class="p-2 font-mono text-gray-500 border-r">${item.id}</td>
-            <td class="p-2 border-r text-gray-700">${item.sms}</td>
-            <td class="p-2 font-medium text-blue-700">${category}</td>
+        // Render matching data record lines grids rows
+        const row = document.createElement('tr');
+        row.className = "divide-x divide-gray-200 text-gray-700 text-xs hover:bg-gray-50";
+        row.innerHTML = `
+            <td class="p-2 text-center text-gray-400 border-r">${index}</td>
+            <td class="p-2 border-r font-mono text-gray-500">${item.id}</td>
+            <td class="p-2 border-r text-gray-800">${item.sms}</td>
+            <td class="p-2 border-r font-semibold text-gray-700">${category}</td>
+            <td class="p-2 text-emerald-600 font-bold tracking-wider">CLUSTER_CONFIRMED</td>
         `;
-        spreadsheetBody.appendChild(tr);
+        spreadsheetTbody.appendChild(row);
     });
 
+    // Populate Left Table Summary Content Row Metrics Panels
     const tableBody = document.getElementById('metrics-table-body');
     tableBody.innerHTML = '';
+    let categoryRowIndex = 0;
+    
     let chartLabels = [];
-    let chartData = [];
+    let chartDataValues = [];
 
-    for (const [catName, metrics] of Object.entries(categorySums)) {
-        if (metrics.count > 0) {
-            const row = document.createElement('tr');
-            row.className = "border-b border-gray-100 hover:bg-gray-50";
-            row.innerHTML = `
-                <td class="p-2 font-medium text-gray-700">${catName}</td>
-                <td class="p-2 text-gray-500">${metrics.count}</td>
-                <td class="p-2 text-right font-semibold text-gray-900">AED ${metrics.sum.toFixed(2)}</td>
-            `;
-            tableBody.appendChild(row);
+    for (const [catName, dataBlock] of Object.entries(ledgerMapMetrics)) {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 divide-x divide-gray-100 text-xs";
+        tr.innerHTML = `
+            <td class="p-2 font-mono text-gray-400 bg-gray-50/50 w-8 text-center">${categoryRowIndex++}</td>
+            <td class="p-2 font-bold text-gray-700">${catName}</td>
+            <td class="p-2 text-center text-gray-500 font-semibold">${dataBlock.count}</td>
+            <td class="p-2 text-right font-bold text-gray-900">AED ${dataBlock.sum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        `;
+        tableBody.appendChild(tr);
 
-            if (metrics.sum > 0) {
-                chartLabels.push(catName);
-                chartData.push(metrics.sum);
-            }
-        }
+        chartLabels.push(catName);
+        chartDataValues.push(dataBlock.sum);
     }
 
-    const ctx = document.getElementById('chartCanvas').getContext('2d');
-    if (myPieChart) myPieChart.destroy();
-    
-    myPieChart = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                data: chartData,
-                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b']
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-
-    switchView(3);
+    // Refresh Chart Graphic Engines Canvas Models Context Containers
+    renderDistributionVisualizationsCharts(chartLabels, chartDataValues);
 }
 
-// Client-side CSV Text Data Stream Builder Engine
-function downloadCategorizedCSV() {
+function renderDistributionVisualizationsCharts(labels, dataValues) {
+    const pieCtx = document.getElementById('pieChartCanvas').getContext('2d');
+    const barCtx = document.getElementById('barChartCanvas').getContext('2d');
+
+    if (chartPieInstance) chartPieInstance.destroy();
+    if (chartBarInstance) chartBarInstance.destroy();
+
+    // Pie chart distribution weights layout matching target design block parameters
+    chartPieInstance = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataValues,
+                backgroundColor: ['#ff9f43', '#00d25b', '#0d6efd', '#56ccf2', '#6f42c1']
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Horizontal category calculation metrics charts volume blocks mapping parameters
+    chartBarInstance = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataValues,
+                backgroundColor: '#3b82f6',
+                barThickness: 16
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 8 } } },
+                y: { grid: { display: false }, ticks: { font: { size: 8 } } }
+            },
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function exportLedgerToCSVStream() {
     if (masterData.length === 0) return;
     let csvRows = ["ID,SMS,assigned_accounting_category,pipeline_status"];
+    
     masterData.forEach(item => {
-        let safeSms = item.sms.replace(/"/g, '""');
-        csvRows.push(`${item.id},"${safeSms}",${item.assignedCategory},CLUSTER_CONFIRMED`);
+        let cleanTextStr = item.sms.replace(/"/g, '""');
+        csvRows.push(`${item.id},"${cleanTextStr}",${item.assignedCategory},CLUSTER_CONFIRMED`);
     });
-    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(csvRows.join("\n"));
+
+    const blob = new Blob([csvRows.join("\n")], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
-    link.setAttribute("href", csvContent);
+    link.href = URL.createObjectURL(blob);
     link.setAttribute("download", "verified_general_ledger.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-}
-
-function restartWizard() {
-    masterData = [];
-    document.getElementById('csv-file-input').value = '';
-    switchView(1);
 }
