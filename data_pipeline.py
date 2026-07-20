@@ -2,13 +2,15 @@ import pandas as pd
 import numpy as np
 import re
 import streamlit as st
+from sklearn.feature_extraction.text import TfidfVectorizer  # 🚀 FIXED: Added missing import
+from sklearn.cluster import KMeans                           # 🚀 FIXED: Added missing import
 
 def clean_production_sms(text: str) -> str:
     """Standardizes text string formatting and protects ATM and TRX keywords."""
     if not text or pd.isna(text): return ""
     text = str(text).upper().strip()
     
-    # ✅ Fixed: Safely falls back to defaults if secrets are loading or missing
+    # Safely falls back to defaults if secrets are loading or missing
     garbage_flags = st.secrets["ML_CONFIG"].get("GARBAGE_FLAGS", ["CORRUPT", "SYSTEM_ERR", "TIMEOUT"])
     if any(err in text for err in garbage_flags):
         return "garbage_error_string_flag"
@@ -37,7 +39,7 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         
     custom_stop_words = ['dear', 'customer', 'account', 'avl', 'bal', 'your', 'has', 'been', 'for', 'you', 'with', 'is']
     
-    # ✅ Fixed: Replaced the broken undefined '_c' variable with 'custom_stop_words'
+    # Replaced the broken undefined '_c' variable with 'custom_stop_words'
     vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words=custom_stop_words)
     X_matrix = vectorizer.fit_transform(df_working.loc[valid_mask, 'cleaned_tokens'])
     
@@ -50,7 +52,7 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
     cluster_centers = kmeans.cluster_centers_
     base_cluster_map = {}
     
-    # ✅ Fixed: Extracted mapping arrays securely from your custom [ML_CONFIG] secrets block
+    # Extracted mapping arrays securely from your custom [ML_CONFIG] secrets block
     credit_tokens = st.secrets["ML_CONFIG"]["CREDIT_TOKENS"]
     apple_tokens = st.secrets["ML_CONFIG"]["APPLE_TOKENS"]
     dhabi_tokens = st.secrets["ML_CONFIG"]["DHABI_TOKENS"]
@@ -59,7 +61,7 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         top_indices = cluster_centers[cluster_id].argsort()[-12:]
         top_tokens = " ".join(list(feature_names[top_indices])).lower()
         
-        # ✅ Fixed: Now checks lists dynamically against your configuration block arrays
+        # Now checks lists dynamically against your configuration block arrays
         if any(tok in top_tokens for tok in credit_tokens):
             base_cluster_map[cluster_id] = "Direct Cash Bank Credits"
         elif any(tok in top_tokens for tok in apple_tokens):
@@ -78,7 +80,7 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         raw_text_upper = str(row['SMS']).upper()
         current_label = row['assigned_accounting_category']
 
-        # ✅ Fixed: Safely links your nested [SUB_CLASSIFICATION] rules dictionary 
+        # Safely links your nested [SUB_CLASSIFICATION] rules dictionary 
         rules = st.secrets["SUB_CLASSIFICATION"]
         
         if current_label == "Generic Token Stream" or pd.isna(current_label):
