@@ -6,14 +6,10 @@
     <title>Xero ML Automated Bookkeeper</title>
     <!-- Tailwind CSS Script Engine -->
     <script src="https://jsdelivr.net"></script>
-    <script>
-        // Forces Tailwind v4 to recognize and inject standard hidden display behaviors safely
-        document.documentElement.addEventListener('DOMContentLoaded', () => {
-            const style = document.createElement('style');
-            style.textContent = '.hidden { display: none !important; }';
-            document.head.appendChild(style);
-        });
-    </script>
+    <!-- Chart.js Engine for Charts -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- External Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
 
@@ -87,11 +83,11 @@
                             </tr>
                         </thead>
                         <tbody id="metrics-table-body">
-                            <!-- Populated dynamically via app.js calculations loop -->
+                            <!-- Populated dynamically via JS calculations -->
                         </tbody>
                     </table>
                     
-                    <!-- 📥 NEW: Download CSV Document Interface Element Trigger Button -->
+                    <!-- Download CSV Document Button -->
                     <button id="btn-download-csv" class="w-full mt-6 bg-emerald-600 text-white font-medium py-2.5 px-4 rounded-lg text-sm hover:bg-emerald-700 transition flex items-center justify-center space-x-2 shadow-sm">
                         <span>📥 Download Final Verified Ledger Spreadsheet</span>
                     </button>
@@ -119,7 +115,7 @@
                             </tr>
                         </thead>
                         <tbody id="spreadsheet-tbody" class="divide-y divide-gray-100">
-                            <!-- Populated dynamically via app.js row loop -->
+                            <!-- Populated dynamically via row loop -->
                         </tbody>
                     </table>
                 </div>
