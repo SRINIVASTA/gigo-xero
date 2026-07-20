@@ -1,14 +1,12 @@
 /**
  * 📊 Unsupervised Xero ML Bookkeeping Logic Pipeline Script
- * Formatted perfectly matching target split screen dashboard layout view models
- * PART 1: Core Setup, Data Listeners, and File Ingestion Engines
+ * PART 1: Data Ingestion Layers for Seamless CSV and Excel Processing
  */
 
 let masterData = [];
 let chartPieInstance = null;
 let chartBarInstance = null;
 
-// Embedded Cores Storage array matrix definitions containing 20 raw record lines data rows pool items
 const embeddedRows = [
     "22-01-2019 14:02 Account *****535 has been created for you.",
     "22-01-2019 14:03 Dear Customer, thank you for opening a new AED account with ADIB.",
@@ -33,13 +31,10 @@ const embeddedRows = [
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Bind listeners targeting sidebar option radio components configurations switches
     document.getElementById('radio-embedded').addEventListener('change', runEmbeddedPipeline);
     document.getElementById('radio-upload').addEventListener('change', toggleUploadSection);
     document.getElementById('csv-file-input').addEventListener('change', handleFileUploadStream);
     document.getElementById('btn-download-csv').addEventListener('click', exportLedgerToCSVStream);
-    
-    // Auto execute default runtime initialization baseline
     runEmbeddedPipeline();
 });
 
@@ -54,30 +49,55 @@ function runEmbeddedPipeline() {
         id: 574063879905315000 + idx,
         sms: smsText
     }));
-    
     document.getElementById('status-text').innerText = `Active: Running pipeline using your Hardcoded Built-In Data Pool (${masterData.length} rows)`;
     calculateAndRenderDashboard();
 }
 
+// 🚀 HYBRID DATA STREAM PARSER: Dynamically processes binary spreadsheet extensions (.xlsx, .xls) and standard text logs (.csv)
 function handleFileUploadStream(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
+    const fileNameLower = file.name.toLowerCase();
+
     reader.onload = function(evt) {
-        const lines = evt.target.result.split('\n').slice(1);
-        masterData = lines.filter(l => l.trim().length > 5).map((line, idx) => {
-            const splitIdx = line.indexOf(',');
-            if (splitIdx === -1) return { id: 574063879905315000 + idx, sms: line.trim() };
-            return {
-                id: line.substring(0, splitIdx).replace(/["']/g, "").trim(),
-                sms: line.substring(splitIdx + 1).replace(/["']/g, "").trim()
-            };
-        });
-        document.getElementById('status-text').innerText = `📥 Active: Ingested CSV file \`${file.name}\` (${masterData.length} rows)`;
+        let extractedRows = [];
+
+        if (fileNameLower.endsWith('.xlsx') || fileNameLower.endsWith('.xls')) {
+            // Excel parsing engine layer logic (SheetJS integration loop)
+            const dataBytes = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(dataBytes, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const parsedJsonRows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { header: 1 });
+            
+            // Filters out empty records arrays mapping index positions
+            extractedRows = parsedJsonRows.slice(1).filter(row => row.length >= 1).map((row, idx) => ({
+                id: row[0] ? row[0].toString().trim() : (574063879905315000 + idx).toString(),
+                sms: row[1] ? row[1].toString().trim() : ""
+            }));
+        } else {
+            // Standard Comma-Separated CSV text matrix parser pipeline fallback
+            const txtDecoder = new TextDecoder('utf-8');
+            const csvTextContent = txtDecoder.decode(evt.target.result);
+            const lines = csvTextContent.split('\n').slice(1);
+            
+            extractedRows = lines.filter(l => l.trim().length > 5).map((line, idx) => {
+                const splitIdx = line.indexOf(',');
+                if (splitIdx === -1) return { id: (574063879905315000 + idx).toString(), sms: line.trim() };
+                return {
+                    id: line.substring(0, splitIdx).replace(/["']/g, "").trim(),
+                    sms: line.substring(splitIdx + 1).replace(/["']/g, "").trim()
+                };
+            });
+        }
+
+        masterData = extractedRows.filter(item => item.sms.length > 2);
+        document.getElementById('status-text').innerText = `📥 Active: Ingested spreadsheet file \`${file.name}\` (${masterData.length} rows parsed)`;
         calculateAndRenderDashboard();
     };
-    reader.readAsText(file);
+
+    reader.readAsArrayBuffer(file);
 }
 
 function cleanStringText(text) {
@@ -98,7 +118,6 @@ function parseCurrencyFloatValue(text) {
  */
 
 function calculateAndRenderDashboard() {
-    // Exactly matches the dictionary mapping outputs metrics from your image target matrix
     let ledgerMapMetrics = {
         "ATM Cash Withdrawals": { count: 0, sum: 0 },
         "Administrative Notification": { count: 0, sum: 0 },
@@ -113,9 +132,8 @@ function calculateAndRenderDashboard() {
     masterData.forEach((item, index) => {
         let cleaned = cleanStringText(item.sms);
         let amount = parseCurrencyFloatValue(item.sms);
-        let category = "Merchant Vendor Spending"; // Default sorting allocation target bucket
+        let category = "Merchant Vendor Spending";
 
-        // Strategic categorical pipeline extraction mappings criteria matching rules logic parameters
         if (cleaned.includes("created") || cleaned.includes("opening") || cleaned.includes("chequebook")) {
             category = "Administrative Notification";
         } else if (cleaned.includes("credited") || cleaned.includes("received")) {
@@ -135,7 +153,6 @@ function calculateAndRenderDashboard() {
             ledgerMapMetrics[category].sum += amount;
         }
 
-        // Render matching data record lines grids rows
         const row = document.createElement('tr');
         row.className = "divide-x divide-gray-200 text-gray-700 text-xs hover:bg-gray-50";
         row.innerHTML = `
@@ -148,7 +165,6 @@ function calculateAndRenderDashboard() {
         spreadsheetTbody.appendChild(row);
     });
 
-    // Populate Left Table Summary Content Row Metrics Panels
     const tableBody = document.getElementById('metrics-table-body');
     tableBody.innerHTML = '';
     let categoryRowIndex = 0;
@@ -171,7 +187,6 @@ function calculateAndRenderDashboard() {
         chartDataValues.push(dataBlock.sum);
     }
 
-    // Refresh Chart Graphic Engines Canvas Models Context Containers
     renderDistributionVisualizationsCharts(chartLabels, chartDataValues);
 }
 
@@ -182,7 +197,6 @@ function renderDistributionVisualizationsCharts(labels, dataValues) {
     if (chartPieInstance) chartPieInstance.destroy();
     if (chartBarInstance) chartBarInstance.destroy();
 
-    // Pie chart distribution weights layout matching target design block parameters
     chartPieInstance = new Chart(pieCtx, {
         type: 'pie',
         data: {
@@ -199,7 +213,6 @@ function renderDistributionVisualizationsCharts(labels, dataValues) {
         }
     });
 
-    // Horizontal category calculation metrics charts volume blocks mapping parameters
     chartBarInstance = new Chart(barCtx, {
         type: 'bar',
         data: {
