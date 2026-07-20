@@ -1,0 +1,39 @@
+/* Custom App Overrides for Xero Bookkeeper Application Dashboard */
+
+/* Custom scroll bar track layout optimization for the Spreadsheet View grid */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Forces fixed table alignment layout boundaries */
+table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+th, td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Unlocks textual line wrap only inside raw log cell elements fields */
+#spreadsheet-tbody td:nth-child(2) {
+    white-space: normal;
+    word-break: break-word;
+}
