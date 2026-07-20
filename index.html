@@ -9,8 +9,7 @@
     <link href="https://jsdelivr.net" rel="stylesheet">
     <!-- Chart.js Engine for Dashboard Visualizations -->
     <script src="https://jsdelivr.net"></script>
-    
-    <!-- 🚀 NEW COMPILER PACK: SheetJS Core Library for native Excel spreadsheet parsing inside browser -->
+    <!-- SheetJS Core Library for Excel parsing -->
     <script src="https://jsdelivr.net"></script>
     
     <!-- External Custom Style Sheet -->
@@ -19,8 +18,9 @@
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex">
 
     <!-- Left Dashboard Control Sidebar -->
-    <aside class="w-80 bg-gray-900 text-gray-300 p-6 flex flex-col justify-between shadow-xl h-screen sticky top-0 flex-shrink-0">
+    <aside class="w-80 bg-gray-900 text-gray-300 p-6 flex flex-col justify-between shadow-xl h-screen sticky top-0 flex-shrink-0 z-20">
         <div>
+            <!-- Section Title Component -->
             <div class="flex items-center space-x-2 text-yellow-500 font-bold mb-6 text-sm tracking-wide">
                 <span>📁</span>
                 <span>Data Source Selection</span>
@@ -28,6 +28,7 @@
             
             <p class="text-xs text-gray-400 mb-4 font-medium">Choose how you want to load data:</p>
             
+            <!-- Ingestion Input Control Layer Selector Options -->
             <div class="space-y-4 text-xs font-medium">
                 <label class="flex items-start space-x-3 cursor-pointer p-2 rounded hover:bg-gray-800 transition">
                     <input type="radio" name="dataSource" id="radio-embedded" checked class="mt-0.5 accent-red-500">
@@ -40,13 +41,21 @@
                 </label>
             </div>
 
-            <!-- Hidden File Input Ingestion Field Wrapper -->
+            <!-- Ingestion Field Wrapper -->
             <div id="upload-wrapper" class="hidden mt-4 border border-dashed border-gray-700 rounded p-4 text-center bg-gray-950">
-                <!-- 🚀 FIXED ACCEPT FILTER: Unlocks cross-format sheet file uploads selection -->
                 <input type="file" id="csv-file-input" accept=".csv, .xlsx, .xls" class="block w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-800 file:text-gray-200 hover:file:bg-gray-700">
+            </div>
+
+            <!-- Dynamic Sheet Selection Panel (Displays for multi-sheet Excel files) -->
+            <div id="sheet-selector-wrapper" class="hidden mt-6 pt-4 border-t border-gray-800">
+                <label for="sheet-select" class="block text-xs font-semibold text-gray-400 mb-2">📄 Select worksheet to process:</label>
+                <select id="sheet-select" class="w-full bg-gray-800 text-gray-200 text-xs rounded border border-gray-700 p-2 focus:outline-none focus:border-blue-500">
+                    <!-- Populated dynamically via JS -->
+                </select>
             </div>
         </div>
 
+        <!-- Authorship credits panel -->
         <div class="border-t border-gray-800 pt-4 text-xs space-y-1 text-gray-500">
             <p>✒️ Created by Srinivasta</p>
             <p class="text-[10px] opacity-70">Automated Bookkeeping Data Solutions</p>
@@ -55,6 +64,8 @@
 
     <!-- Right Workspace Dashboard Layout Analytics Engine Area -->
     <main class="flex-grow p-8 overflow-y-auto max-h-screen min-w-0">
+        
+        <!-- Application Title Block Header -->
         <header class="mb-6">
             <div class="flex items-center space-x-3">
                 <span class="text-3xl">📊</span>
@@ -62,77 +73,91 @@
             </div>
         </header>
 
+        <!-- Pipeline Execution Notification Alert Toast -->
         <div id="status-alert" class="bg-green-100 border border-green-200 text-green-800 font-medium text-xs p-3 rounded-md mb-6 flex items-center space-x-2">
             <span>✅</span>
             <span id="status-text">Active: Running pipeline using your Hardcoded Built-In Data Pool (20 rows)</span>
         </div>
 
+        <!-- Analytical Grid Workspace Section Panels Group Container -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <!-- General Ledger Metrics Table -->
+            
+            <!-- Left Grid Card Block Layout Component: General Ledger Metrics Table -->
             <section class="bg-white p-6 rounded-lg shadow border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-2">General Ledger Metrics Summary</h2>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-xs text-left text-gray-600">
-                        <thead class="bg-gray-900 text-gray-200">
-                            <tr>
+                    <table class="w-full text-xs text-left text-gray-600 border border-gray-200">
+                        <thead class="bg-[#1a1c23] text-gray-200">
+                            <tr class="divide-x divide-gray-700">
+                                <th class="p-2 w-8 text-center bg-gray-800"></th>
                                 <th class="p-2">assigned_accounting_category</th>
-                                <th class="p-2 text-center">transaction_count</th>
-                                <th class="p-2 text-right">total_volume_aed</th>
+                                <th class="p-2 text-center w-32">transaction_count</th>
+                                <th class="p-2 text-right w-40">total_volume_aed</th>
                             </tr>
                         </thead>
-                        <tbody id="metrics-table-body" class="divide-y divide-gray-100 font-medium"></tbody>
+                        <tbody id="metrics-table-body" class="divide-y divide-gray-200 font-medium">
+                            <!-- Populated dynamically via script execution calculation arrays -->
+                        </tbody>
                     </table>
                 </div>
 
-                <button id="btn-download-csv" class="mt-6 bg-gray-880 hover:bg-gray-700 text-white text-xs font-semibold py-2 px-4 rounded shadow transition flex items-center space-x-2">
+                <!-- Export Data Ledger Generation Download Document Trigger Button -->
+                <button id="btn-download-csv" class="mt-6 bg-[#1f2937] hover:bg-gray-800 text-white text-xs font-semibold py-2 px-4 rounded shadow transition flex items-center space-x-2">
                     <span>💾</span>
                     <span>Download Final Verified Ledger Spreadsheet</span>
                 </button>
             </section>
 
-            <!-- Visual Analytics Plots Graphs charts Panels -->
+            <!-- Right Grid Card Block Layout Component: Visual Analytics Plots Graphs charts Panels -->
             <section class="bg-white p-6 rounded-lg shadow border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-2">Data Analytics Distribution Visualizations</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 h-56 items-center">
-                    <div class="flex flex-col items-center h-full justify-between">
-                        <span class="text-[10px] font-bold text-gray-500 text-center tracking-tight">Total Capital Allocation Share (%)</span>
-                        <div class="w-36 h-36 relative">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 h-64 items-center">
+                    <!-- Left: Allocation Share Pie Chart Wrapper container context -->
+                    <div class="flex flex-col items-center h-full justify-between pb-2 bg-gray-50/50 border border-gray-100 rounded p-2">
+                        <span class="text-[10px] font-bold text-gray-500 text-center tracking-tight mb-2">Total Capital Allocation Share (%)</span>
+                        <div class="w-40 h-40 relative">
                             <canvas id="pieChartCanvas"></canvas>
                         </div>
                     </div>
-                    <div class="flex flex-col items-center h-full justify-between">
-                        <span class="text-[10px] font-bold text-gray-500 text-center tracking-tight">Total Category Spending Volume (AED)</span>
-                        <div class="w-full h-36">
+                    <!-- Right: Spending Category Bar Layout chart Wrapper context -->
+                    <div class="flex flex-col items-center h-full justify-between pb-2 bg-gray-50/50 border border-gray-100 rounded p-2">
+                        <span class="text-[10px] font-bold text-gray-500 text-center tracking-tight mb-2">Total Category Spending Volume (AED)</span>
+                        <div class="w-full h-40">
                             <canvas id="barChartCanvas"></canvas>
                         </div>
                     </div>
                 </div>
             </section>
+
         </div>
 
-        <!-- Spreadsheet Explorer View Grid Logs Section Panel Wrapper -->
+        <!-- Spreadsheet Explorer View Grid Logs Section Panel Wrapper Container -->
         <footer class="bg-white p-6 rounded-lg shadow border border-gray-200">
             <h2 class="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-2 flex items-center space-x-2">
                 <span>📝</span>
                 <span>Live Spreadsheet View Explorer</span>
             </h2>
-            <div class="overflow-x-auto border border-gray-200 rounded max-h-80 overflow-y-auto">
+            <div class="overflow-x-auto border border-gray-200 rounded max-h-80 overflow-y-auto shadow-inner">
                 <table class="w-full text-xs text-left text-gray-700 border-collapse">
-                    <thead class="bg-gray-900 text-gray-200 font-semibold sticky top-0 z-10">
+                    <thead class="bg-[#1a1c23] text-gray-200 font-semibold sticky top-0 z-10">
                         <tr class="divide-x divide-gray-700">
-                            <th class="p-2 w-12 text-center"></th>
+                            <th class="p-2 w-12 text-center bg-gray-800"></th>
                             <th class="p-2 w-40">ID</th>
                             <th class="p-2 w-96">SMS</th>
                             <th class="p-2 w-56">assigned_accounting_category</th>
                             <th class="p-2 w-40">pipeline_status</th>
                         </tr>
                     </thead>
-                    <tbody id="spreadsheet-tbody" class="divide-y divide-gray-200 font-medium"></tbody>
+                    <tbody id="spreadsheet-tbody" class="divide-y divide-gray-200 font-medium">
+                        <!-- Populated dynamically via transaction loop records cells rows -->
+                    </tbody>
                 </table>
             </div>
         </footer>
+
     </main>
 
+    <!-- Custom Logic Interface Connector Engine Script File -->
     <script src="app.js"></script>
 </body>
 </html>
