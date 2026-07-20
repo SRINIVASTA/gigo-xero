@@ -1,6 +1,6 @@
 /**
  * 📊 Unsupervised Xero ML Bookkeeping Logic Pipeline Script
- * Created by Srinivasta for pure browser client execution execution
+ * Created by Srinivasta for pure browser client execution
  */
 
 // Global state trackers variables configuration blocks
@@ -35,19 +35,28 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('btn-run-pipeline').addEventListener('click', executeMLPipeline);
     document.getElementById('btn-reset-wizard').addEventListener('click', restartWizard);
     document.getElementById('btn-download-csv').addEventListener('click', downloadCategorizedCSV);
+    switchView(1); // Set initial stage explicitly on boot setup
 });
 
 // View Navigation Panel Switch State Controller Layout
 function switchView(stepNumber) {
-    document.getElementById('panel-step-1').classList.add('hidden');
-    document.getElementById('panel-step-2').classList.add('hidden');
-    document.getElementById('panel-step-3').classList.add('hidden');
+    const p1 = document.getElementById('panel-step-1');
+    const p2 = document.getElementById('panel-step-2');
+    const p3 = document.getElementById('panel-step-3');
+
+    // Force explicit toggle states using classList APIs
+    p1.classList.add('hidden');
+    p2.classList.add('hidden');
+    p3.classList.add('hidden');
     
     document.getElementById('step-badge-1').className = "text-sm font-semibold text-gray-400 pb-2";
     document.getElementById('step-badge-2').className = "text-sm font-semibold text-gray-400 pb-2";
     document.getElementById('step-badge-3').className = "text-sm font-semibold text-gray-400 pb-2";
 
-    document.getElementById(`panel-step-${stepNumber}`).classList.remove('hidden');
+    if (stepNumber === 1) p1.classList.remove('hidden');
+    if (stepNumber === 2) p2.classList.remove('hidden');
+    if (stepNumber === 3) p3.classList.remove('hidden');
+    
     document.getElementById(`step-badge-${stepNumber}`).className = `text-sm font-semibold text-blue-600 border-b-2 border-blue-600 pb-2`;
 }
 
@@ -60,18 +69,18 @@ function loadEmbeddedData() {
 }
 
 function handleCsvUpload(e) {
-    const file = e.target.files[0];
+    const file = e.target.files;
     if (!file) return;
     
     const reader = new FileReader();
     reader.onload = function(evt) {
-        const lines = evt.target.result.split('\n').slice(1); // drops header boundaries line
+        const lines = evt.target.result.split('\n').slice(1);
         masterData = lines.filter(l => l.trim().length > 5).map((line, idx) => {
-            const parts = line.split(',');
-            return { 
-                id: parts[0] ? parts[0].trim() : (574063879905315000 + idx), 
-                sms: parts[1] ? parts[1].replace(/["']/g, "").trim() : line.trim() 
-            };
+            const commaIdx = line.indexOf(',');
+            if (commaIdx === -1) return { id: 574063879905315000 + idx, sms: line.trim() };
+            const idPart = line.substring(0, commaIdx).replace(/["']/g, "").trim();
+            const smsPart = line.substring(commaIdx + 1).replace(/["']/g, "").trim();
+            return { id: idPart || (574063879905315000 + idx), sms: smsPart };
         });
         switchView(2);
     };
@@ -85,11 +94,11 @@ function cleanSmsString(text) {
     t = t.replace(/TRX\./g, " ").replace(/TRX/g, " ").replace(/A\/C/g, " ");
     t = t.replace(/\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}/g, '');
     t = t.replace(/\d+\.\d+/g, '').replace(/\b\d+\b/g, '').replace(/\*/g, '');
-    return t.toLowerCase().strip();
+    return t.toLowerCase().trim();
 }
 
 function extractCurrencyFloat(text) {
-    const match = text.match(/(?:AED|aed)\s*([\d,]+\.?\d*)/);
+    const match = text.match(/(?:AED|aed)\s*([\d,]+\.?\d*)/i);
     return match ? parseFloat(match[1].replace(/,/g, '')) : 0.0;
 }
 
@@ -112,7 +121,6 @@ function executeMLPipeline() {
         const amt = extractCurrencyFloat(item.sms);
         let category = "General Ledger Adjustments";
 
-        // Conditional string sorting simulating our cluster mapping arrays
         if (cleaned === "garbage_flag") {
             category = "General Ledger Adjustments";
         } else if (cleaned.includes("credited") || cleaned.includes("received")) {
@@ -127,7 +135,6 @@ function executeMLPipeline() {
             category = "Administrative Notification";
         }
 
-        // Cache assigned calculations directly into object items arrays values
         item.assignedCategory = category;
 
         if (categorySums[category]) {
@@ -135,7 +142,6 @@ function executeMLPipeline() {
             categorySums[category].sum += amt;
         }
 
-        // Render matching operational logging data rows cells values
         const tr = document.createElement('tr');
         tr.className = "hover:bg-gray-50 border-b border-gray-100";
         tr.innerHTML = `
@@ -146,7 +152,6 @@ function executeMLPipeline() {
         spreadsheetBody.appendChild(tr);
     });
 
-    // Populate Analytics Metrics Output Panel Grid Content Frame rows
     const tableBody = document.getElementById('metrics-table-body');
     tableBody.innerHTML = '';
     let chartLabels = [];
@@ -170,9 +175,8 @@ function executeMLPipeline() {
         }
     }
 
-    // Fire Chart.js Dashboard visual graphics updates
     const ctx = document.getElementById('chartCanvas').getContext('2d');
-    if (myPieChart) myPieChart.destroy(); // Resets tracking canvas tracking caches 
+    if (myPieChart) myPieChart.destroy();
     
     myPieChart = new Chart(ctx, {
         type: 'pie',
@@ -189,29 +193,19 @@ function executeMLPipeline() {
     switchView(3);
 }
 
-// 📥 NEW: Client-side CSV Text Data Stream Builder Engine
+// Client-side CSV Text Data Stream Builder Engine
 function downloadCategorizedCSV() {
     if (masterData.length === 0) return;
-
-    // Assemble matching spreadsheet rows array headers
     let csvRows = ["ID,SMS,assigned_accounting_category,pipeline_status"];
-
     masterData.forEach(item => {
-        // Safe string escapes quotes array components mapping values checks
         let safeSms = item.sms.replace(/"/g, '""');
         csvRows.push(`${item.id},"${safeSms}",${item.assignedCategory},CLUSTER_CONFIRMED`);
     });
-
-    // Compile into continuous blob memory segment structures blocks
-    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
-    const encodedUri = encodeURI(csvContent);
-    
-    // Generate virtual DOM anchor link and click down file
+    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(csvRows.join("\n"));
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", csvContent);
     link.setAttribute("download", "verified_general_ledger.csv");
     document.body.appendChild(link);
-    
     link.click();
     document.body.removeChild(link);
 }
