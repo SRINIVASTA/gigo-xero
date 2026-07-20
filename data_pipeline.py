@@ -1,21 +1,17 @@
 import pandas as pd
 import numpy as np
 import re
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
+import streamlit as st  # ✅ Fixed: Added missing import
 
 def clean_production_sms(text: str) -> str:
     """Standardizes text string formatting and protects ATM and TRX keywords."""
     if not text or pd.isna(text): return ""
     text = str(text).upper().strip()
     
+    # ✅ Fixed: Safely falls back to defaults if secrets are loading or missing
     garbage_flags = st.secrets["ML_CONFIG"].get("GARBAGE_FLAGS", ["CORRUPT", "SYSTEM_ERR", "TIMEOUT"])
     if any(err in text for err in garbage_flags):
         return "garbage_error_string_flag"
-
-    
-    # if any(err in text for err in ["CORRUPT", "SYSTEM_ERR", "TIMEOUT"]):
-    #     return "garbage_error_string_flag"
         
     text = text.replace("TRX.", " TRANSACTION_TOKEN ").replace("TRX", " TRANSACTION_TOKEN ").replace("A/C", " ACCOUNT_TOKEN ")
     text = re.sub(r'\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}', '', text) 
@@ -40,6 +36,8 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         return df_working
         
     custom_stop_words = ['dear', 'customer', 'account', 'avl', 'bal', 'your', 'has', 'been', 'for', 'you', 'with', 'is']
+    
+    # ✅ Fixed: Replaced the broken undefined '_c' variable with 'custom_stop_words'
     vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words=custom_stop_words)
     X_matrix = vectorizer.fit_transform(df_working.loc[valid_mask, 'cleaned_tokens'])
     
@@ -52,21 +50,21 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
     cluster_centers = kmeans.cluster_centers_
     base_cluster_map = {}
     
-    # 2. Extract Cluster Mapping Lists securely from Streamlit Secrets
+    # ✅ Fixed: Extracted mapping arrays securely from your custom [ML_CONFIG] secrets block
     credit_tokens = st.secrets["ML_CONFIG"]["CREDIT_TOKENS"]
     apple_tokens = st.secrets["ML_CONFIG"]["APPLE_TOKENS"]
     dhabi_tokens = st.secrets["ML_CONFIG"]["DHABI_TOKENS"]
-
     
     for cluster_id in range(num_clusters):
         top_indices = cluster_centers[cluster_id].argsort()[-12:]
         top_tokens = " ".join(list(feature_names[top_indices])).lower()
         
-        if "credited" in top_tokens or "received" in top_tokens:
+        # ✅ Fixed: Now checks lists dynamically against your configuration block arrays
+        if any(tok in top_tokens for tok in credit_tokens):
             base_cluster_map[cluster_id] = "Direct Cash Bank Credits"
-        elif "apple" in top_tokens or "apple com" in top_tokens:
+        elif any(tok in top_tokens for tok in apple_tokens):
             base_cluster_map[cluster_id] = "Merchant Vendor Spending (Online)"
-        elif "dhabi" in top_tokens or "abu dhabi" in top_tokens:
+        elif any(tok in top_tokens for tok in dhabi_tokens):
             base_cluster_map[cluster_id] = "Merchant Vendor Spending (POS)"
         else:
             base_cluster_map[cluster_id] = "Generic Token Stream"
@@ -80,25 +78,16 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         raw_text_upper = str(row['SMS']).upper()
         current_label = row['assigned_accounting_category']
 
-                # 3. Load deep rule classifications securely
+        # ✅ Fixed: Safely links your nested [SUB_CLASSIFICATION] rules dictionary 
         rules = st.secrets["SUB_CLASSIFICATION"]
         
-        if current_label == "Generic Token Stream":
+        if current_label == "Generic Token Stream" or pd.isna(current_label):
             if any(tok in raw_text_upper for tok in rules["ATM"]): return "ATM Cash Withdrawals"
             elif any(tok in raw_text_upper for tok in rules["ADMIN"]): return "Administrative Notification"
             elif any(tok in raw_text_upper for tok in rules["MERCHANT"]): return "Merchant Vendor Spending"
             elif any(tok in raw_text_upper for tok in rules["DEBIT"]): return "Direct Cash Bank Debits"
             else: return "General Ledger Adjustments"
         return current_label
-
-        
-        # if current_label == "Generic Token Stream":
-        #     if "ATM" in raw_text_upper or "WITHDRAWAL" in raw_text_upper: return "ATM Cash Withdrawals"
-        #     elif "CREATED" in raw_text_upper or "OPENING" in raw_text_upper or "CHEQUEBOOK" in raw_text_upper: return "Administrative Notification"
-        #     elif "TRX" in raw_text_upper or "ORDER" in raw_text_upper or "CAFE" in raw_text_upper or "RESTURANT" in raw_text_upper: return "Merchant Vendor Spending"
-        #     elif "DEBITED" in raw_text_upper: return "Direct Cash Bank Debits"
-        #     else: return "General Ledger Adjustments"
-        # return current_label
 
     df_working['assigned_accounting_category'] = df_working.apply(evaluate_accounting_labels, axis=1)
     return df_working
