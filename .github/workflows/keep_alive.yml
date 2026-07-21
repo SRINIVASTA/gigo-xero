@@ -1,0 +1,24 @@
+name: Keep Streamlit App Awake
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Automatically pings every 6 hours
+  workflow_dispatch:      # Allows manual trigger anytime
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Make a Fake Change
+        run: |
+          echo "$(date)" > ping.txt
+
+      - name: Commit and Push Change
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "actions@github.com"
+          git add ping.txt
+          git commit -m "Automated keep-awake ping" || exit 0
+          git push
