@@ -1,163 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xero ML Automated Bookkeeper</title>
-    
-    <!-- Production Stable Tailwind CSS CDN -->
-    <link href="https://jsdelivr.net" rel="stylesheet">
-    <!-- Chart.js Engine for Dashboard Visualizations -->
-    <script src="https://jsdelivr.net"></script>
-    <!-- SheetJS Core Library for Excel parsing -->
-    <script src="https://jsdelivr.net"></script>
-    
-    <!-- External Custom Style Sheet -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Unsupervised Xero ML Bookkeeping & Analytics Engine – client-side transaction classification, ledger metrics, and interactive Plotly visualizations." />
+  <title>Xero ML Bookkeeping & Analytics Engine</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Plotly.js – interactive charting -->
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
+  <!-- SheetJS (xlsx) – Excel workbook parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- PapaParse – CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex">
+<body>
 
-    <!-- Left Dashboard Control Sidebar -->
-    <aside class="w-80 bg-gray-900 text-gray-300 p-6 flex flex-col justify-between shadow-xl h-screen sticky top-0 flex-shrink-0 z-20">
-        <div>
-            <!-- Section Title Component -->
-            <div class="flex items-center space-x-2 text-yellow-500 font-bold mb-6 text-sm tracking-wide">
-                <span>📁</span>
-                <span>Data Source Selection</span>
-            </div>
-            
-            <p class="text-xs text-gray-400 mb-4 font-medium">Choose how you want to load data:</p>
-            
-            <!-- Ingestion Input Control Layer Selector Options -->
-            <div class="space-y-4 text-xs font-medium">
-                <label class="flex items-start space-x-3 cursor-pointer p-2 rounded hover:bg-gray-800 transition">
-                    <input type="radio" name="dataSource" id="radio-embedded" checked class="mt-0.5 accent-red-500">
-                    <span>Option 1: Use Code-Embedded Transactions (20 Live Rows)</span>
-                </label>
-                
-                <label class="flex items-start space-x-3 cursor-pointer p-2 rounded hover:bg-gray-800 transition">
-                    <input type="radio" name="dataSource" id="radio-upload" class="mt-0.5 accent-red-500">
-                    <span>Option 2: Upload My Custom Excel/CSV File</span>
-                </label>
-            </div>
+  <!-- ═══════════════════════════════════════════════
+       APP SHELL
+  ════════════════════════════════════════════════ -->
+  <div class="app-shell">
 
-            <!-- Ingestion Field Wrapper -->
-            <div id="upload-wrapper" class="hidden mt-4 border border-dashed border-gray-700 rounded p-4 text-center bg-gray-950">
-                <input type="file" id="csv-file-input" accept=".csv, .xlsx, .xls" class="block w-full text-xs text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-800 file:text-gray-200 hover:file:bg-gray-700">
-            </div>
+    <!-- ── LEFT SIDEBAR ── -->
+    <aside class="sidebar" id="sidebar">
 
-            <!-- Dynamic Sheet Selection Panel (Displays for multi-sheet Excel files) -->
-            <div id="sheet-selector-wrapper" class="hidden mt-6 pt-4 border-t border-gray-800">
-                <label for="sheet-select" class="block text-xs font-semibold text-gray-400 mb-2">📄 Select worksheet to process:</label>
-                <select id="sheet-select" class="w-full bg-gray-800 text-gray-200 text-xs rounded border border-gray-700 p-2 focus:outline-none focus:border-blue-500">
-                    <!-- Populated dynamically via JS -->
-                </select>
-            </div>
+      <div class="sidebar-header">
+        <div class="sidebar-icon">📁</div>
+        <h2 class="sidebar-title">Data Source<br>Selection</h2>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Radio Options -->
+      <div class="source-options" id="sourceOptions">
+
+        <label class="radio-card active" id="radioCard1" for="opt1">
+          <div class="radio-indicator" id="radioInd1"></div>
+          <div class="radio-content">
+            <span class="radio-title">Option 1</span>
+            <span class="radio-desc">Use Code-Embedded Transactions<br><strong>(20 Live Rows)</strong></span>
+          </div>
+        </label>
+        <input type="radio" id="opt1" name="dataSource" value="builtin" checked hidden />
+
+        <label class="radio-card" id="radioCard2" for="opt2">
+          <div class="radio-indicator" id="radioInd2"></div>
+          <div class="radio-content">
+            <span class="radio-title">Option 2</span>
+            <span class="radio-desc">Upload My Custom<br><strong>Excel / CSV File</strong></span>
+          </div>
+        </label>
+        <input type="radio" id="opt2" name="dataSource" value="upload" hidden />
+
+      </div>
+
+      <!-- File Upload Panel (hidden by default) -->
+      <div class="upload-panel" id="uploadPanel">
+        <div class="upload-drop-zone" id="dropZone">
+          <div class="upload-icon">📂</div>
+          <p class="upload-hint">Drop your file here or</p>
+          <label class="upload-btn" for="filePicker">Browse File</label>
+          <input type="file" id="filePicker" accept=".csv,.xlsx" hidden />
+          <p class="upload-formats">Accepts: .xlsx &nbsp;|&nbsp; .csv</p>
         </div>
 
-        <!-- Authorship credits panel -->
-        <div class="border-t border-gray-800 pt-4 text-xs space-y-1 text-gray-500">
-            <p>✒️ Created by Srinivasta</p>
-            <p class="text-[10px] opacity-70">Automated Bookkeeping Data Solutions</p>
+        <!-- Sheet selector (shown only for .xlsx) -->
+        <div class="sheet-selector" id="sheetSelector" style="display:none;">
+          <label class="sheet-label" for="sheetSelect">📄 Select Worksheet Tab</label>
+          <select id="sheetSelect" class="sheet-select"></select>
         </div>
+      </div>
+
+      <!-- Pipeline Status -->
+      <div class="sidebar-status" id="sidebarStatus">
+        <div class="status-dot"></div>
+        <span>Pipeline Active</span>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+
+      <!-- Footer -->
+      <footer class="sidebar-footer">
+        <div class="footer-sig">✍ Created by <strong>Srinivasta</strong></div>
+        <div class="footer-sub">Automated Bookkeeping<br>Data Solutions</div>
+      </footer>
+
     </aside>
 
-    <!-- Right Workspace Dashboard Layout Analytics Engine Area -->
-    <main class="flex-grow p-8 overflow-y-auto max-h-screen min-w-0">
-        
-        <!-- Application Title Block Header -->
-        <header class="mb-6">
-            <div class="flex items-center space-x-3">
-                <span class="text-3xl">📊</span>
-                <h1 class="text-2xl font-bold text-gray-800">Unsupervised Xero ML Bookkeeping & Analytics Engine</h1>
-            </div>
-        </header>
+    <!-- ── MAIN DASHBOARD ── -->
+    <main class="dashboard" id="dashboard">
 
-        <!-- Pipeline Execution Notification Alert Toast -->
-        <div id="status-alert" class="bg-green-100 border border-green-200 text-green-800 font-medium text-xs p-3 rounded-md mb-6 flex items-center space-x-2">
-            <span>✅</span>
-            <span id="status-text">Active: Running pipeline using your Hardcoded Built-In Data Pool (20 rows)</span>
+      <!-- TOP HEADER BAR -->
+      <header class="dash-header">
+        <div class="dash-title-block">
+          <span class="dash-emoji">📊</span>
+          <div>
+            <h1 class="dash-title">Unsupervised Xero ML Bookkeeping &amp; Analytics Engine</h1>
+            <p class="dash-subtitle">Client-Side Rule-Based Transaction Classifier &amp; Ledger Visualizer</p>
+          </div>
         </div>
-
-        <!-- Analytical Grid Workspace Section Panels Group Container -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            
-            <!-- Left Grid Card Block Layout Component: General Ledger Metrics Table -->
-            <section class="bg-white p-6 rounded-lg shadow border border-gray-200">
-                <h2 class="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-2">General Ledger Metrics Summary</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-xs text-left text-gray-600 border border-gray-200">
-                        <thead class="bg-[#1a1c23] text-gray-200">
-                            <tr class="divide-x divide-gray-700">
-                                <th class="p-2 w-8 text-center bg-gray-800"></th>
-                                <th class="p-2">assigned_accounting_category</th>
-                                <th class="p-2 text-center w-32">transaction_count</th>
-                                <th class="p-2 text-right w-40">total_volume_aed</th>
-                            </tr>
-                        </thead>
-                        <tbody id="metrics-table-body" class="divide-y divide-gray-200 font-medium">
-                            <!-- Populated dynamically via script execution calculation arrays -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Export Data Ledger Generation Download Document Trigger Button -->
-                <button id="btn-download-csv" class="mt-6 bg-[#1f2937] hover:bg-gray-800 text-white text-xs font-semibold py-2 px-4 rounded shadow transition flex items-center space-x-2">
-                    <span>💾</span>
-                    <span>Download Final Verified Ledger Spreadsheet</span>
-                </button>
-            </section>
-
-            <!-- Right Grid Card Block Layout Component: Visual Analytics Plots Graphs charts Panels -->
-            <section class="bg-white p-6 rounded-lg shadow border border-gray-200">
-                <h2 class="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-2">Data Analytics Distribution Visualizations</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 h-64 items-center">
-                    <!-- Left: Allocation Share Pie Chart Wrapper container context -->
-                    <div class="flex flex-col items-center h-full justify-between pb-2 bg-gray-50/50 border border-gray-100 rounded p-2">
-                        <span class="text-[10px] font-bold text-gray-500 text-center tracking-tight mb-2">Total Capital Allocation Share (%)</span>
-                        <div class="w-40 h-40 relative">
-                            <canvas id="pieChartCanvas"></canvas>
-                        </div>
-                    </div>
-                    <!-- Right: Spending Category Bar Layout chart Wrapper context -->
-                    <div class="flex flex-col items-center h-full justify-between pb-2 bg-gray-50/50 border border-gray-100 rounded p-2">
-                        <span class="text-[10px] font-bold text-gray-500 text-center tracking-tight mb-2">Total Category Spending Volume (AED)</span>
-                        <div class="w-full h-40">
-                            <canvas id="barChartCanvas"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
+        <div class="dash-meta">
+          <div class="meta-chip" id="rowCountChip">
+            <span class="chip-val" id="rowCountVal">20</span>
+            <span class="chip-label">Rows</span>
+          </div>
+          <div class="meta-chip">
+            <span class="chip-val" id="catCountVal">–</span>
+            <span class="chip-label">Categories</span>
+          </div>
+          <div class="meta-chip">
+            <span class="chip-val" id="totalVolVal">–</span>
+            <span class="chip-label">Total AED</span>
+          </div>
         </div>
+      </header>
 
-        <!-- Spreadsheet Explorer View Grid Logs Section Panel Wrapper Container -->
-        <footer class="bg-white p-6 rounded-lg shadow border border-gray-200">
-            <h2 class="text-sm font-bold text-gray-700 mb-4 border-b border-gray-100 pb-2 flex items-center space-x-2">
-                <span>📝</span>
-                <span>Live Spreadsheet View Explorer</span>
-            </h2>
-            <div class="overflow-x-auto border border-gray-200 rounded max-h-80 overflow-y-auto shadow-inner">
-                <table class="w-full text-xs text-left text-gray-700 border-collapse">
-                    <thead class="bg-[#1a1c23] text-gray-200 font-semibold sticky top-0 z-10">
-                        <tr class="divide-x divide-gray-700">
-                            <th class="p-2 w-12 text-center bg-gray-800"></th>
-                            <th class="p-2 w-40">ID</th>
-                            <th class="p-2 w-96">SMS</th>
-                            <th class="p-2 w-56">assigned_accounting_category</th>
-                            <th class="p-2 w-40">pipeline_status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="spreadsheet-tbody" class="divide-y divide-gray-200 font-medium">
-                        <!-- Populated dynamically via transaction loop records cells rows -->
-                    </tbody>
-                </table>
+      <!-- STATUS BANNER -->
+      <div class="status-banner" id="statusBanner">
+        <span class="status-icon">✔</span>
+        <span id="statusText">Active: Running pipeline using your Hardcoded Built-In Data Pool (20 rows)</span>
+        <div class="status-pulse"></div>
+      </div>
+
+      <!-- ───────────────────────────────────────────
+           SECTION 1 – General Ledger Metrics Summary
+      ──────────────────────────────────────────── -->
+      <section class="dash-section" id="ledgerSection">
+        <div class="section-header">
+          <h2 class="section-title">🗂 General Ledger Metrics Summary</h2>
+          <button class="export-btn" id="exportBtn">
+            <span>📥</span> Download Final Verified Ledger Spreadsheet
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table class="ledger-table" id="ledgerTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Assigned Accounting Category</th>
+                <th>Transaction Count</th>
+                <th>Total Volume (AED)</th>
+                <th>Share %</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerBody">
+              <!-- Populated by JS -->
+            </tbody>
+            <tfoot id="ledgerFoot"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- ───────────────────────────────────────────
+           SECTION 2 – Analytics Distribution Charts
+      ──────────────────────────────────────────── -->
+      <section class="dash-section" id="chartsSection">
+        <div class="section-header">
+          <h2 class="section-title">📈 Data Analytics Distribution Visualizations</h2>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card" id="chartCard1">
+            <div class="chart-card-header">
+              <span class="chart-badge donut-badge">🍩</span>
+              <h3 class="chart-card-title">Total Capital Allocation Share (%)</h3>
             </div>
-        </footer>
+            <div id="donutChart" class="plotly-container"></div>
+          </div>
+          <div class="chart-card" id="chartCard2">
+            <div class="chart-card-header">
+              <span class="chart-badge bar-badge">📊</span>
+              <h3 class="chart-card-title">Total Category Spending Volume (AED)</h3>
+            </div>
+            <div id="barChart" class="plotly-container"></div>
+          </div>
+        </div>
+      </section>
 
-    </main>
+      <!-- ───────────────────────────────────────────
+           SECTION 3 – Live Spreadsheet View Explorer
+      ──────────────────────────────────────────── -->
+      <section class="dash-section" id="gridSection">
+        <div class="section-header">
+          <h2 class="section-title">📝 Live Spreadsheet View Explorer</h2>
+          <div class="grid-controls">
+            <input type="text" id="gridSearch" class="grid-search" placeholder="🔍  Search transactions…" />
+            <span class="grid-count" id="gridCount">20 records</span>
+          </div>
+        </div>
+        <div class="grid-wrap">
+          <table class="grid-table" id="gridTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>SMS Message</th>
+                <th>Assigned Accounting Category</th>
+                <th>Amount (AED)</th>
+                <th>Pipeline Status</th>
+              </tr>
+            </thead>
+            <tbody id="gridBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-    <!-- Custom Logic Interface Connector Engine Script File -->
-    <script src="app.js"></script>
+      <!-- Footer strip -->
+      <div class="dash-footer-strip">
+        <span>Xero ML Engine &nbsp;•&nbsp; Client-Side Only &nbsp;•&nbsp; No Data Leaves Your Browser</span>
+        <span id="dashTimestamp"></span>
+      </div>
+
+    </main><!-- /dashboard -->
+  </div><!-- /app-shell -->
+
+  <script src="app.js"></script>
 </body>
 </html>
