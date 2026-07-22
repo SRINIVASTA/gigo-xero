@@ -6,9 +6,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("FIREWALL")
 
 def verify_and_log_locally(user_key):
-    valid_keys = st.secrets.get("AUTHORIZED_KEYS", [])
+    # 🔥 FIX: Map your license keys directly to their allowed countries
+    KEY_COUNTRY_MAP = {
+        "TEST-KEY-1234": "India",
+        "CLIENT-IN-5566": "India",
+        "CLIENT-US-7788": "United States"
+    }
     
-    if user_key not in valid_keys:
+    if user_key not in KEY_COUNTRY_MAP:
         logger.error(f"🛑 REJECTED: Invalid key entry: '{user_key}'")
         st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
         st.stop()
@@ -20,9 +25,9 @@ def verify_and_log_locally(user_key):
     if "," in ip:
         ip = ip.split(",")[0].strip()
 
-    # Fallback placeholder for local testing
+    # Fallback placeholder for local testing env
     if ip == "Unknown IP" or ip.startswith("127."):
-        ip = "103.241.12.89" 
+        ip = "103.241.12.89" # Resolves to India
         
     try:
         geo_response = requests.get(f'https://ipapi.co{ip}/json/', timeout=5)
@@ -33,18 +38,16 @@ def verify_and_log_locally(user_key):
     except Exception:
         pass
 
-    # 🔥 UPDATED REGIONAL LOCK RULE
-    # Define which countries are legally allowed to run your $5k software
-    ALLOWED_COUNTRIES = ["India", "United States"]
+    # 🔥 STRICK MATCH CHECK: Does the current country match the key's allowed country?
+    required_country = KEY_COUNTRY_MAP[user_key]
     
-    if country not in ALLOWED_COUNTRIES and country != "Unknown Country":
-        logger.warning(f"✈️ REGIONAL BREACH BLOCKED: Key '{user_key}' attempted from {city}, {country} (IP: {ip})")
-        st.error(f"🚨 REGIONAL LOCK: This software is not licensed for use in {country}.")
+    if country != required_country and country != "Unknown Country":
+        logger.warning(f"✈️ LOCATION BREACH: Key '{user_key}' (Requires {required_country}) used from {city}, {country}")
+        st.error(f"🚨 REGIONAL LOCK: This license key is restricted to use inside the {required_country} only.")
         st.stop()
 
     logger.info(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
     return f"{city}, {country}"
-
 # --- Force Login UI Layout ---
 st.sidebar.title("🔐 Software Security Portal")
 license_input = st.sidebar.text_input("Enter License Key:", type="password")
