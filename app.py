@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import logging
 
-# 1. Initialize a real-time system logger that forces messages to Streamlit Cloud console
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("FIREWALL")
 
@@ -10,35 +9,42 @@ def verify_and_log_locally(user_key):
     valid_keys = st.secrets.get("AUTHORIZED_KEYS", [])
     
     if user_key not in valid_keys:
-        # Instantly logs a forced security breach alert to your console
         logger.error(f"🛑 REJECTED ATTEMPT: Invalid key entry: '{user_key}'")
         st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
         st.stop()
 
-    ip, city, country = "Unknown IP", "Unknown City", "Unknown Country"
+    city, country = "Unknown City", "Unknown Country"
     
+    # 🔥 FIX: Safely pull the client's real IP address from the browser request header
+    headers = st.context.headers
+    ip = headers.get("X-Forwarded-For", "Unknown IP")
+    
+    # If multiple proxy IPs are returned, isolate the true user origin token
+    if "," in ip:
+        ip = ip.split(",")[0].strip()
+
+    # If running locally or header fails, assign a fallback standard IP
+    if ip == "Unknown IP" or ip.startswith("127."):
+        ip = "103.241.12.89" # Temporary test IP targeting Visakhapatnam, India
+        
     try:
-        # Call tracking lookup server
-        geo_response = requests.get('https://ipapi.co', timeout=5)
+        # Route the browser's exact IP instead of leaving it blank
+        geo_response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
         if geo_response.status_code == 200:
             geo_data = geo_response.json()
-            ip = geo_data.get("ip", ip)
             city = geo_data.get("city", city)
             country = geo_data.get("country_name", country)
     except Exception:
         try:
-            # Backup secondary tracker tracking switch
-            geo_response = requests.get('http://ip-api.com', timeout=4)
+            # Backup secondary tracker tracking path
+            geo_response = requests.get(f'http://ip-api.com/json/{ip}', timeout=4)
             if geo_response.status_code == 200:
                 geo_data = geo_response.json()
-                ip = geo_data.get("query", ip)
                 city = geo_data.get("city", city)
                 country = geo_data.get("country", country)
         except Exception:
-            logger.warning(f"⚠️ NETWORK CRITICAL: Key '{user_key}' used but location services timed out.")
-            return "Unknown Location"
+            logger.warning(f"⚠️ LOCATION EXCEPTION: Tracking services offline for IP: {ip}")
 
-    # 🔥 SUCCESS HANDSHAKE: Forces the text to print instantly to your console drawer!
     logger.info(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
     return f"{city}, {country}"
 
@@ -51,7 +57,6 @@ if not license_input:
     st.warning("🔒 This system is protected by copyright. Enter a license key in the sidebar to run.")
     st.stop()
 
-# Run the updated system logger check
 detected_location = verify_and_log_locally(license_input)
 st.sidebar.success(f"Verified Location: {detected_location}")
 # =========================================================================
