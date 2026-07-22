@@ -1,22 +1,25 @@
 import streamlit as st
 import requests
+import logging
+
+# 1. Initialize a real-time system logger that forces messages to Streamlit Cloud console
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("FIREWALL")
 
 def verify_and_log_locally(user_key):
-    # 1. First, instantly check if the key exists in your hidden secrets vault
     valid_keys = st.secrets.get("AUTHORIZED_KEYS", [])
     
     if user_key not in valid_keys:
-        # Halt execution immediately if the key is flat-out wrong
-        print(f"🛑 INTENTIONAL BLOCKED ACCESS: Invalid key '{user_key}' entered.")
+        # Instantly logs a forced security breach alert to your console
+        logger.error(f"🛑 REJECTED ATTEMPT: Invalid key entry: '{user_key}'")
         st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
         st.stop()
 
-    # 2. Key is valid! Now, carefully fetch location with an automatic backup system
     ip, city, country = "Unknown IP", "Unknown City", "Unknown Country"
     
     try:
-        # Try Primary Location Server (increased timeout to 8 seconds)
-        geo_response = requests.get('https://ipapi.co', timeout=8)
+        # Call tracking lookup server
+        geo_response = requests.get('https://ipapi.co', timeout=5)
         if geo_response.status_code == 200:
             geo_data = geo_response.json()
             ip = geo_data.get("ip", ip)
@@ -24,24 +27,23 @@ def verify_and_log_locally(user_key):
             country = geo_data.get("country_name", country)
     except Exception:
         try:
-            # BACKUP SYSTEM: Try Secondary Location Server if Primary fails/times out
-            geo_response = requests.get('http://ip-api.com', timeout=5)
+            # Backup secondary tracker tracking switch
+            geo_response = requests.get('http://ip-api.com', timeout=4)
             if geo_response.status_code == 200:
                 geo_data = geo_response.json()
                 ip = geo_data.get("query", ip)
                 city = geo_data.get("city", city)
                 country = geo_data.get("country", country)
         except Exception:
-            # If BOTH networks are totally down, allow entry but log a severe warning
-            print(f"⚠️ LOCATION MONITORING WARNING: Key '{user_key}' bypassed firewall. Location servers down.")
-            return "Server Offline (Access Granted)"
+            logger.warning(f"⚠️ NETWORK CRITICAL: Key '{user_key}' used but location services timed out.")
+            return "Unknown Location"
 
-    # 3. Print the tracking log to your private Streamlit Cloud dashboard console
-    print(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
+    # 🔥 SUCCESS HANDSHAKE: Forces the text to print instantly to your console drawer!
+    logger.info(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
     return f"{city}, {country}"
 
 # --- Force Login UI Layout ---
-st.sidebar.title("临 Software Security Portal")
+st.sidebar.title("🔐 Software Security Portal")
 license_input = st.sidebar.text_input("Enter License Key:", type="password")
 
 if not license_input:
@@ -49,7 +51,7 @@ if not license_input:
     st.warning("🔒 This system is protected by copyright. Enter a license key in the sidebar to run.")
     st.stop()
 
-# Run the updated localized check
+# Run the updated system logger check
 detected_location = verify_and_log_locally(license_input)
 st.sidebar.success(f"Verified Location: {detected_location}")
 # =========================================================================
