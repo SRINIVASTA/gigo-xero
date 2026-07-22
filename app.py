@@ -24,6 +24,7 @@ def verify_and_log_locally(user_key):
         "TEST-KEY-1234": "India",
         "CLIENT-IN-5566": "India",
         "CLIENT-US-7788": "United States"
+        "CLIENT-NG-2233": "Nigeria"
     }
     
     # 1. Anonymous Invalid Key Block
