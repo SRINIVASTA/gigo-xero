@@ -1,4 +1,7 @@
 import streamlit as st
+st.markdown("<style>#GithubIcon {visibility: hidden;} .viewerBadge_link__1S137 {display: none;}</style>", unsafe_allow_html=True)
+
+import streamlit as st
 import requests
 import logging
 from streamlit_javascript import st_javascript
