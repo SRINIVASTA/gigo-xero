@@ -364,12 +364,12 @@ body {
   color: var(--accent-cyan);
   font-family: 'JetBrains Mono', monospace;
 }
-.chip-label {
-  font-size: 10px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-top: 2px;
+.chip-label { 
+ font-size: 10px; 
+ color: var(--text-secondary) !important; /* Brightens up the metric card labels */
+ text-transform: uppercase; 
+ letter-spacing: 0.06em; 
+ margin-top: 2px;
 }
 
 /* ── Status Banner ──────────────────────────────────────────── */
