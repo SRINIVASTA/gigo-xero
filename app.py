@@ -23,7 +23,7 @@ def verify_and_log_locally(user_key):
     KEY_COUNTRY_MAP = {
         "TEST-KEY-1234": "India",
         "CLIENT-IN-5566": "India",
-        "CLIENT-US-7788": "United States"
+        "CLIENT-US-7788": "United States",
         "CLIENT-NG-2233": "Nigeria"
     }
     
