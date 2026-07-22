@@ -39,9 +39,12 @@ def verify_and_log_locally(user_key):
         st.warning("🔄 Authenticating secure connection profile... Please wait 2 seconds.")
         st.stop()
 
+    # Get required target country for this key
+    required_country = KEY_COUNTRY_MAP[user_key]
+
     city, country = "Unknown City", "Unknown Country"
     try:
-        geo_response = requests.get(f'https://ipapi.co{ip}/json/', timeout=5)
+        geo_response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
         if geo_response.status_code == 200:
             geo_data = geo_response.json()
             city = geo_data.get("city", city)
@@ -49,14 +52,15 @@ def verify_and_log_locally(user_key):
     except Exception:
         pass
 
-    # 2. Anonymous Regional Lock Block (For BOTH India and USA)
-    required_country = KEY_COUNTRY_MAP[user_key]
-    
+    # 2. Updated Regional Lock Block (Smart Fallback Optimization)
+    # If the network API fails ("Unknown Country"), allow access ONLY if the key is your Indian profile
+    if country == "Unknown Country" and required_country == "India":
+        logger.info(f"ℹ️ API TIMEOUT BYPASS: Key '{user_key}' granted login via Indian account fallback.")
+        return "India (Network Fallback)"
+
+    # Strict structural comparison check
     if country != required_country:
-        # Keep the detailed details in YOUR private console logs so you know who it was
         logger.warning(f"✈️ LOCATION BREACH BLOCKED: Key '{user_key}' (Requires {required_country}) attempted from {city}, {country} (IP: {ip})")
-        
-        # Show a 100% clean screen to the user. No keys, no leaking country data.
         st.error(f"🚨 REGIONAL LOCK: This software profile is restricted to use inside the **{required_country}** only. Access denied.")
         st.stop()
 
