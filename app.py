@@ -1,4 +1,50 @@
 import streamlit as st
+import requests
+
+def verify_and_log_locally(user_key):
+    try:
+        # 1. Fetch physical location parameters based on user's active IP
+        geo_data = requests.get('https://ipapi.co', timeout=5).json()
+        ip = geo_data.get("ip", "Unknown")
+        city = geo_data.get("city", "Unknown")
+        country = geo_data.get("country_name", "Unknown")
+        
+        # 2. Retrieve your hidden authorized key array from Streamlit Secrets
+        valid_keys = st.secrets.get("AUTHORIZED_KEYS", [])
+        
+        if user_key not in valid_keys:
+            # Prints directly to your private Streamlit Cloud Console logs
+            print(f"🛑 SECURITY ALERTT: Unauthorized key '{user_key}' tried from {city}, {country} (IP: {ip})")
+            st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
+            st.stop() # Halts app instantly
+            
+        # 3. Successful handshake -> Log user location trail to console
+        print(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
+        return f"{city}, {country}"
+        
+    except Exception:
+        # Guardrail if network drops
+        st.error("🚨 SECURITY FAULT: Local authentication firewall timeout.")
+        st.stop()
+
+# --- Force Login UI Layout ---
+st.sidebar.title("🔐 Software Security Portal")
+license_input = st.sidebar.text_input("Enter License Key:", type="password")
+
+if not license_input:
+    st.title("📊 Unsupervised Xero ML Bookkeeping Engine")
+    st.warning("🔒 This system is protected by copyright. Enter a license key in the sidebar to run.")
+    st.stop()
+
+# Run the localized check
+detected_location = verify_and_log_locally(license_input)
+st.sidebar.success(f"Verified Location: {detected_location}")
+
+# =========================================================================
+# 🔄 YOUR ORIGINAL GIGO-XERO MACHINE LEARNING PIPELINE CODE CONTINUES HERE
+# =========================================================================
+
+import streamlit as st
 import pandas as pd
 import re
 import matplotlib.pyplot as plt
