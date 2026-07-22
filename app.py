@@ -26,15 +26,15 @@ def verify_and_log_locally(user_key):
         "CLIENT-US-7788": "United States"
     }
     
+    # 1. Anonymous Invalid Key Block
     if user_key not in KEY_COUNTRY_MAP:
-        logger.error(f"🛑 REJECTED: Invalid key entry: '{user_key}'")
+        logger.error("🛑 REJECTED: Invalid key entry.")
         st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
         st.stop()
 
     # Get the real client IP via JS
     ip = get_real_client_ip()
     
-    # If the JS is still loading or blocked, wait for user input instead of guessing India
     if ip == "Unknown IP" or not ip:
         st.warning("🔄 Authenticating secure connection profile... Please wait 2 seconds.")
         st.stop()
@@ -49,16 +49,20 @@ def verify_and_log_locally(user_key):
     except Exception:
         pass
 
-    # Match check: Ensure key matches the exact network country detected
+    # 2. Anonymous Regional Lock Block (For BOTH India and USA)
     required_country = KEY_COUNTRY_MAP[user_key]
     
     if country != required_country:
+        # Keep the detailed details in YOUR private console logs so you know who it was
         logger.warning(f"✈️ LOCATION BREACH BLOCKED: Key '{user_key}' (Requires {required_country}) attempted from {city}, {country} (IP: {ip})")
-        st.error(f"🚨 REGIONAL LOCK: This license key ({user_key}) is restricted to use inside the {required_country} only. Access denied from {country}.")
+        
+        # Show a 100% clean screen to the user. No keys, no leaking country data.
+        st.error(f"🚨 REGIONAL LOCK: This software profile is restricted to use inside the **{required_country}** only. Access denied.")
         st.stop()
 
-    logger.info(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
-    return f"{city}, {country} ({ip})"
+    # Success Log
+    logger.info(f"🔓 ACCESS GRANTED: Key used in {city}, {country} (IP: {ip})")
+    return f"{city}, {country}"
 
 # --- Force Login UI Layout ---
 st.sidebar.title("🔐 Software Security Portal")
