@@ -1,12 +1,25 @@
 import streamlit as st
 import requests
 import logging
+from streamlit_javascript import st_javascript
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("FIREWALL")
 
+def get_real_client_ip():
+    # 🔥 Forces the user's browser to execute JavaScript and fetch their real IP address
+    url = 'https://api.ipify.org?format=json'
+    script = f'await fetch("{url}").then(r => r.json());'
+    try:
+        result = st_javascript(script)
+        if isinstance(result, dict) and 'ip' in result:
+            return result['ip']
+    except Exception:
+        pass
+    return "Unknown IP"
+
 def verify_and_log_locally(user_key):
-    # 🔥 FIX: Map your license keys directly to their allowed countries
+    # Strict key to country mapping
     KEY_COUNTRY_MAP = {
         "TEST-KEY-1234": "India",
         "CLIENT-IN-5566": "India",
@@ -18,17 +31,15 @@ def verify_and_log_locally(user_key):
         st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
         st.stop()
 
-    city, country = "Unknown City", "Unknown Country"
-    headers = st.context.headers
-    ip = headers.get("X-Forwarded-For", "Unknown IP")
+    # Get the real client IP via JS
+    ip = get_real_client_ip()
     
-    if "," in ip:
-        ip = ip.split(",")[0].strip()
+    # If the JS is still loading or blocked, wait for user input instead of guessing India
+    if ip == "Unknown IP" or not ip:
+        st.warning("🔄 Authenticating secure connection profile... Please wait 2 seconds.")
+        st.stop()
 
-    # Fallback placeholder for local testing env
-    if ip == "Unknown IP" or ip.startswith("127."):
-        ip = "103.241.12.89" # Resolves to India
-        
+    city, country = "Unknown City", "Unknown Country"
     try:
         geo_response = requests.get(f'https://ipapi.co{ip}/json/', timeout=5)
         if geo_response.status_code == 200:
@@ -38,16 +49,17 @@ def verify_and_log_locally(user_key):
     except Exception:
         pass
 
-    # 🔥 STRICK MATCH CHECK: Does the current country match the key's allowed country?
+    # Match check: Ensure key matches the exact network country detected
     required_country = KEY_COUNTRY_MAP[user_key]
     
-    if country != required_country and country != "Unknown Country":
-        logger.warning(f"✈️ LOCATION BREACH: Key '{user_key}' (Requires {required_country}) used from {city}, {country}")
-        st.error(f"🚨 REGIONAL LOCK: This license key is restricted to use inside the {required_country} only.")
+    if country != required_country:
+        logger.warning(f"✈️ LOCATION BREACH BLOCKED: Key '{user_key}' (Requires {required_country}) attempted from {city}, {country} (IP: {ip})")
+        st.error(f"🚨 REGIONAL LOCK: This license key ({user_key}) is restricted to use inside the {required_country} only. Access denied from {country}.")
         st.stop()
 
     logger.info(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
-    return f"{city}, {country}"
+    return f"{city}, {country} ({ip})"
+
 # --- Force Login UI Layout ---
 st.sidebar.title("🔐 Software Security Portal")
 license_input = st.sidebar.text_input("Enter License Key:", type="password")
@@ -57,6 +69,7 @@ if not license_input:
     st.warning("🔒 This system is protected by copyright. Enter a license key in the sidebar to run.")
     st.stop()
 
+# Run the strict browser check
 detected_location = verify_and_log_locally(license_input)
 st.sidebar.success(f"Verified Location: {detected_location}")
 # =========================================================================
