@@ -325,16 +325,17 @@ body {
   line-height: 1;
   filter: drop-shadow(0 0 12px rgba(59,130,246,0.6));
 }
-.dash-title {
-  font-size: 19px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  background: linear-gradient(135deg, #e6edf3, var(--accent-cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.dash-title { 
+ font-size: 19px; 
+ font-weight: 800; 
+ color: var(--text-primary); /* Reliable solid-color fallback */
+ letter-spacing: -0.02em; 
+ line-height: 1.25; 
+ background: linear-gradient(135deg, #e6edf3, var(--accent-cyan)); 
+ -webkit-background-clip: text; 
+ -webkit-text-fill-color: transparent; /* Correct standard webkit property */
+ background-clip: text;
+ color: transparent; /* Extra fallback layer for modern browsers */
 }
 .dash-subtitle {
   font-size: 12px;
