@@ -87,3 +87,8 @@ To bypass validation errors during custom document file parsing, your uploaded s
 | `574063879905315003` | `Dear Customer, ATM Cash Withdrawal for AED 100.00 was debited.` |
 
 *Note: Any blank rows trailing below your data grids inside sheet ranges are automatically detected, filtered out, and logged as system-rejected anomaly rows.*
+> ⚠️ **IMPORTANT COPYRIGHT NOTICE**
+> 
+> **All Rights Reserved © 2026 T A Srinivas.**
+> This repository is strictly for portfolio viewing purposes. **DO NOT COPY, CLONE, OR REDISTRIBUTE** this code. Stolen copies or unauthorized forks will be reported immediately for a GitHub copyright takedown.
+
