@@ -2,33 +2,46 @@ import streamlit as st
 import requests
 
 def verify_and_log_locally(user_key):
-    try:
-        # 1. Fetch physical location parameters based on user's active IP
-        geo_data = requests.get('https://ipapi.co', timeout=5).json()
-        ip = geo_data.get("ip", "Unknown")
-        city = geo_data.get("city", "Unknown")
-        country = geo_data.get("country_name", "Unknown")
-        
-        # 2. Retrieve your hidden authorized key array from Streamlit Secrets
-        valid_keys = st.secrets.get("AUTHORIZED_KEYS", [])
-        
-        if user_key not in valid_keys:
-            # Prints directly to your private Streamlit Cloud Console logs
-            print(f"🛑 SECURITY ALERTT: Unauthorized key '{user_key}' tried from {city}, {country} (IP: {ip})")
-            st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
-            st.stop() # Halts app instantly
-            
-        # 3. Successful handshake -> Log user location trail to console
-        print(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
-        return f"{city}, {country}"
-        
-    except Exception:
-        # Guardrail if network drops
-        st.error("🚨 SECURITY FAULT: Local authentication firewall timeout.")
+    # 1. First, instantly check if the key exists in your hidden secrets vault
+    valid_keys = st.secrets.get("AUTHORIZED_KEYS", [])
+    
+    if user_key not in valid_keys:
+        # Halt execution immediately if the key is flat-out wrong
+        print(f"🛑 INTENTIONAL BLOCKED ACCESS: Invalid key '{user_key}' entered.")
+        st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
         st.stop()
 
+    # 2. Key is valid! Now, carefully fetch location with an automatic backup system
+    ip, city, country = "Unknown IP", "Unknown City", "Unknown Country"
+    
+    try:
+        # Try Primary Location Server (increased timeout to 8 seconds)
+        geo_response = requests.get('https://ipapi.co', timeout=8)
+        if geo_response.status_code == 200:
+            geo_data = geo_response.json()
+            ip = geo_data.get("ip", ip)
+            city = geo_data.get("city", city)
+            country = geo_data.get("country_name", country)
+    except Exception:
+        try:
+            # BACKUP SYSTEM: Try Secondary Location Server if Primary fails/times out
+            geo_response = requests.get('http://ip-api.com', timeout=5)
+            if geo_response.status_code == 200:
+                geo_data = geo_response.json()
+                ip = geo_data.get("query", ip)
+                city = geo_data.get("city", city)
+                country = geo_data.get("country", country)
+        except Exception:
+            # If BOTH networks are totally down, allow entry but log a severe warning
+            print(f"⚠️ LOCATION MONITORING WARNING: Key '{user_key}' bypassed firewall. Location servers down.")
+            return "Server Offline (Access Granted)"
+
+    # 3. Print the tracking log to your private Streamlit Cloud dashboard console
+    print(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
+    return f"{city}, {country}"
+
 # --- Force Login UI Layout ---
-st.sidebar.title("🔐 Software Security Portal")
+st.sidebar.title("临 Software Security Portal")
 license_input = st.sidebar.text_input("Enter License Key:", type="password")
 
 if not license_input:
@@ -36,10 +49,9 @@ if not license_input:
     st.warning("🔒 This system is protected by copyright. Enter a license key in the sidebar to run.")
     st.stop()
 
-# Run the localized check
+# Run the updated localized check
 detected_location = verify_and_log_locally(license_input)
 st.sidebar.success(f"Verified Location: {detected_location}")
-
 # =========================================================================
 # 🔄 YOUR ORIGINAL GIGO-XERO MACHINE LEARNING PIPELINE CODE CONTINUES HERE
 # =========================================================================
