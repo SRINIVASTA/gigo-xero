@@ -25,7 +25,7 @@ def verify_and_log_locally(user_key):
 
     # If running locally or header fails, assign a fallback standard IP
     if ip == "Unknown IP" or ip.startswith("127."):
-        ip = "103.241.12.89" # Temporary test IP targeting Visakhapatnam, India
+        ip = "103.241.12.89" 
         
     try:
         # Route the browser's exact IP instead of leaving it blank
