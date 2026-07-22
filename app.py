@@ -9,41 +9,38 @@ def verify_and_log_locally(user_key):
     valid_keys = st.secrets.get("AUTHORIZED_KEYS", [])
     
     if user_key not in valid_keys:
-        logger.error(f"🛑 REJECTED ATTEMPT: Invalid key entry: '{user_key}'")
+        logger.error(f"🛑 REJECTED: Invalid key entry: '{user_key}'")
         st.error("🚨 ACCESS DENIED: Invalid or Unpaid Software License Key.")
         st.stop()
 
     city, country = "Unknown City", "Unknown Country"
-    
-    # 🔥 FIX: Safely pull the client's real IP address from the browser request header
     headers = st.context.headers
     ip = headers.get("X-Forwarded-For", "Unknown IP")
     
-    # If multiple proxy IPs are returned, isolate the true user origin token
     if "," in ip:
         ip = ip.split(",")[0].strip()
 
-    # If running locally or header fails, assign a fallback standard IP
+    # Fallback placeholder for local testing
     if ip == "Unknown IP" or ip.startswith("127."):
         ip = "103.241.12.89" 
         
     try:
-        # Route the browser's exact IP instead of leaving it blank
-        geo_response = requests.get(f'https://ipapi.co/{ip}/json/', timeout=5)
+        geo_response = requests.get(f'https://ipapi.co{ip}/json/', timeout=5)
         if geo_response.status_code == 200:
             geo_data = geo_response.json()
             city = geo_data.get("city", city)
             country = geo_data.get("country_name", country)
     except Exception:
-        try:
-            # Backup secondary tracker tracking path
-            geo_response = requests.get(f'http://ip-api.com/json/{ip}', timeout=4)
-            if geo_response.status_code == 200:
-                geo_data = geo_response.json()
-                city = geo_data.get("city", city)
-                country = geo_data.get("country", country)
-        except Exception:
-            logger.warning(f"⚠️ LOCATION EXCEPTION: Tracking services offline for IP: {ip}")
+        pass
+
+    # 🔥 UPDATED REGIONAL LOCK RULE
+    # Define which countries are legally allowed to run your $5k software
+    ALLOWED_COUNTRIES = ["India", "United States"]
+    
+    if country not in ALLOWED_COUNTRIES and country != "Unknown Country":
+        logger.warning(f"✈️ REGIONAL BREACH BLOCKED: Key '{user_key}' attempted from {city}, {country} (IP: {ip})")
+        st.error(f"🚨 REGIONAL LOCK: This software is not licensed for use in {country}.")
+        st.stop()
 
     logger.info(f"🔓 ACCESS GRANTED: Key '{user_key}' opened in {city}, {country} (IP: {ip})")
     return f"{city}, {country}"
