@@ -8,6 +8,16 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Streamlit App
-        run: |
-          curl -s https://gigo-xero-zxeczpkv4wbafsntchzm72.streamlit.app/ > /dev/null
+      - name: Check out repo code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Automation Tools
+        run: pip install selenium webdriver-manager
+
+      - name: Wake Up App Using Browser Simulation
+        run: python wake_app.py
