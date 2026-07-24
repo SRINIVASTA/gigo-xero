@@ -1,4 +1,13 @@
 import streamlit as st
+from tracker import track_all_apps
+
+# Line 1 of your app: Just pass the specific name of this app!
+track_all_apps("Gigo-Xero Accounting") 
+
+# ... your normal code continues here ...
+st.title("Gigo-Xero App Engine")
+
+import streamlit as st
 
 # Force Streamlit to completely hide the header bar, deployment buttons, and GitHub icons
 st.markdown("""
