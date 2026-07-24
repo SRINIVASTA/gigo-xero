@@ -1,11 +1,30 @@
 import streamlit as st
-from tracker import track_all_apps
+import requests
 
-# Line 1 of your app: Just pass the specific name of this app!
-track_all_apps("Gigo-Xero Accounting") 
+# --- DYNAMIC ANALYTICS LOADER ---
+@st.cache_resource
+def load_central_tracker():
+    """Dynamically downloads and executes the master tracker code from GitHub."""
+    try:
+        # Pulls the raw python code directly from your public repo
+        url = "https://githubusercontent.com"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            # Executes the file content in local memory context
+            namespace = {}
+            exec(response.text, namespace)
+            return namespace.get("track_all_apps")
+    except Exception:
+        pass
+    return None
 
-# ... your normal code continues here ...
-st.title("Gigo-Xero App Engine")
+# Fetch the tracking function dynamically
+track_all_apps = load_central_tracker()
+
+# Execute it safely if successfully fetched
+if track_all_apps:
+    track_all_apps("Gigo-Xero Accounting")
+# ────────────────────────────────────────────────────────────────────────────────
 
 import streamlit as st
 
