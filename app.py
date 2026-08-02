@@ -225,16 +225,17 @@ else:
         # 💡 IMPORTANT: If Option 2 is chosen but no file is dropped, show this instead of crashing!
         st.info("💡 Getting Started: Please drag and drop your banking ledger files into the sidebar panel to calculate metrics.")
 
-# -----------------------------------------------------------------------------
+# =================================================================------------
 # 🛡️ THE COMPLETE PROTECTION LAYER WRAPPER
-# Everything below line 225 MUST be nested entirely under this IF condition!
-# -----------------------------------------------------------------------------
+# Everything below must be strictly nested inside this conditional wrapper block!
+# =================================================================------------
 if df_master is not None:
     if not all(col in df_master.columns for col in ['Transaction ID', 'SMS']):
         st.error(f"❌ Schema Validation Failed! Layout columns must match 'Transaction ID' and 'SMS'. Found: {list(df_master.columns)}")
         st.info("💡 Recommendation: Check your other sheet variations using the selection dropdown in the sidebar.")
         st.stop()
         
+    # Execute the machine learning accounting parser safely
     df_final = run_unsupervised_accounting_pipeline(df_master)
     
     def extract_currency_float(text):
@@ -276,13 +277,18 @@ if df_master is not None:
         else:
             st.warning("No numeric monetary values parsed to plot dashboard statistics.")
             
-    # 🚀 FIXED: This header and dataframe MUST be pushed inside the "if df_master is not None:" block!
-    # 🚀 FIXED: Add exactly 4 spaces of indentation to the lines below
+    # 🚀 THE DEFINITIVE UI RENDER LAYER
+    # Moving this block inside the 'if' statement fixes your NameError completely!
     st.subheader("📝 Live Spreadsheet View Explorer")
+    
+    # Enforcing TextColumn config acts exactly like your <td> markup tags, blocking browser rounding errors
     st.dataframe(
         df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
         use_container_width=True,
         column_config={
-            "Transaction ID": st.column_config.TextColumn("Transaction ID", help="Pure unformatted text reference code")
+            "Transaction ID": st.column_config.TextColumn(
+                "Transaction ID", 
+                help="Locked plain text representation of long bank numeric string identifiers"
+            )
         }
     )
