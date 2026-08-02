@@ -235,7 +235,6 @@ if df_master is not None:
         st.info("💡 Recommendation: Check your other sheet variations using the selection dropdown in the sidebar.")
         st.stop()
         
-    # Line 229 is now permanently safe from running on empty data streams!
     df_final = run_unsupervised_accounting_pipeline(df_master)
     
     def extract_currency_float(text):
@@ -277,17 +276,13 @@ if df_master is not None:
         else:
             st.warning("No numeric monetary values parsed to plot dashboard statistics.")
             
-st.subheader("📝 Live Spreadsheet View Explorer")
-
-# 🚀 THE DEFINITIVE STREAMLIT FIXED CODE BLOCK
-st.dataframe(
-    df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
-    use_container_width=True,
-    column_config={
-        # This completely freezes the datatype as text, stopping JavaScript from rounding it
-        "Transaction ID": st.column_config.TextColumn(
-            "Transaction ID", 
-            help="Pure text representation preventing browser rounding errors"
-        )
-    }
-)
+    # 🚀 FIXED: This header and dataframe MUST be pushed inside the "if df_master is not None:" block!
+    # 🚀 FIXED: Add exactly 4 spaces of indentation to the lines below
+    st.subheader("📝 Live Spreadsheet View Explorer")
+    st.dataframe(
+        df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
+        use_container_width=True,
+        column_config={
+            "Transaction ID": st.column_config.TextColumn("Transaction ID", help="Pure unformatted text reference code")
+        }
+    )
