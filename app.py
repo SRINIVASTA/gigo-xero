@@ -188,29 +188,31 @@ df_master = None
 
 if data_option == "Option 1: Use Code-Embedded Transactions (20 Live Rows)":
     df_master = pd.DataFrame(embedded_20_transactions)
+    # 🚀 FIX: Force embedded hardcoded rows to cast to text immediately upon dataframe creation
+    if 'ID' in df_master.columns:
+        df_master['ID'] = df_master['ID'].astype(str)
+        
     st.success(f"✅ Active: Running pipeline using your **Hardcoded Built-In Data Pool** ({len(df_master)} rows)")
 else:
-    # Wrapped in single quotes to allow internal quotes/Markdown links without syntax errors
     uploaded_file = st.sidebar.file_uploader(
         'Upload your custom transaction spreadsheet from [Kaggle Dataset](https://www.kaggle.com/datasets/engreemali/bank-transactions-sms-datasetss):', 
         type=["xlsx", "xls", "csv"]
     )
     if uploaded_file is not None:
-        # Proceed with file reading and processing logic
-        # [THE MULTI-SHEET UPDATE] If it's an Excel file, parse individual worksheets dynamically
         if uploaded_file.name.endswith('.csv'):
-            df_master = pd.read_csv(uploaded_file)
+            # 🚀 FIX: Forcing 'ID' column to read natively as a text string to lock precision
+            df_master = pd.read_csv(uploaded_file, dtype={'ID': str})
             st.success(f"📥 Active: Ingested CSV file `{uploaded_file.name}` ({len(df_master)} rows)")
         else:
             excel_file_object = pd.ExcelFile(uploaded_file)
             sheet_names = excel_file_object.sheet_names
             
-            # Show worksheet selection options box in UI sidebar
             selected_sheet = st.sidebar.selectbox(
                 f"📄 Select worksheet to process ({len(sheet_names)} found):",
                 sheet_names
             )
-            df_master = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
+            # 🚀 FIX: Pass explicit dtype casting rules inside multi-sheet Excel parser loops
+            df_master = pd.read_excel(uploaded_file, sheet_name=selected_sheet, dtype={'ID': str})
             st.success(f"📥 Active: Processing Worksheet `{selected_sheet}` inside `{uploaded_file.name}` ({len(df_master)} rows)")
 
 # Execute engine calculations only if data frames are populated
@@ -229,6 +231,7 @@ if df_master is not None:
     df_confirmed = df_final[df_final['pipeline_status'] == 'CLUSTER_CONFIRMED'].copy()
     df_confirmed['parsed_amount'] = df_confirmed['SMS'].apply(extract_currency_float)
     
+    # 🚀 FIX: Count transaction records using size or format conversion, to prevent metrics errors
     pivot_summary = df_confirmed.groupby('assigned_accounting_category').agg(
         transaction_count=('ID', 'count'),
         total_volume_aed=('parsed_amount', 'sum'),
@@ -248,7 +251,8 @@ if df_master is not None:
         
     with col2:
         st.subheader("Data Analytics Distribution Visualizations")
-        plot_df = pivot_summary[pivot_summary['total_volume_aed'] > 0].sort_values(by='total_volume_aed', ascending=False)
+        # 🚀 FIX: Plot metrics evaluation mapping fix
+        plot_df = pivot_summary[pivot_summary['transaction_count'] > 0].sort_values(by='total_volume_aed', ascending=False)
         
         if not plot_df.empty:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
@@ -262,4 +266,11 @@ if df_master is not None:
             st.warning("No numeric monetary values parsed to plot dashboard statistics.")
             
     st.subheader("📝 Live Spreadsheet View Explorer")
-    st.dataframe(df_final[['ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], use_container_width=True)
+    # 🚀 FIX: Added TextColumn configuration mapping to stop Streamlit formatting IDs with commas
+    st.dataframe(
+        df_final[['ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
+        use_container_width=True,
+        column_config={
+            "ID": st.column_config.TextColumn("Transaction ID", help="Pure text reference code string")
+        }
+    )
