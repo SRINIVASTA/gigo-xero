@@ -200,8 +200,8 @@ else:
     )
     if uploaded_file is not None:
         if uploaded_file.name.endswith('.csv'):
-            # 🚀 FIX: Forcing 'ID' column to read natively as a text string to lock precision
-            df_master = pd.read_csv(uploaded_file, dtype={'ID': str})
+            # 🚀 FIXED: Maps both header variants to string type text data
+            df_master = pd.read_csv(uploaded_file, dtype={'ID': str, 'Transaction ID': str})
             st.success(f"📥 Active: Ingested CSV file `{uploaded_file.name}` ({len(df_master)} rows)")
         else:
             excel_file_object = pd.ExcelFile(uploaded_file)
@@ -211,8 +211,13 @@ else:
                 f"📄 Select worksheet to process ({len(sheet_names)} found):",
                 sheet_names
             )
-            # 🚀 FIX: Pass explicit dtype casting rules inside multi-sheet Excel parser loops
-            df_master = pd.read_excel(uploaded_file, sheet_name=selected_sheet, dtype={'ID': str})
+            # 🚀 FIXED: Changed target from 'uploaded_file' to 'excel_file_object' 
+            # 🚀 FIXED: Enforces string rule on 'Transaction ID' explicitly to lock precision
+            df_master = pd.read_excel(
+                excel_file_object, 
+                sheet_name=selected_sheet, 
+                dtype={'ID': str, 'Transaction ID': str}
+            )
             st.success(f"📥 Active: Processing Worksheet `{selected_sheet}` inside `{uploaded_file.name}` ({len(df_master)} rows)")
 
 # Execute engine calculations only if data frames are populated
@@ -266,11 +271,11 @@ if df_master is not None:
             st.warning("No numeric monetary values parsed to plot dashboard statistics.")
             
     st.subheader("📝 Live Spreadsheet View Explorer")
-    # 🚀 FIX: Added TextColumn configuration mapping to stop Streamlit formatting IDs with commas
+    # 🚀 Ensure 'Transaction ID' is passed into your list view layout array
     st.dataframe(
-        df_final[['ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
+        df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
         use_container_width=True,
         column_config={
-            "ID": st.column_config.TextColumn("Transaction ID", help="Pure text reference code string")
+            "Transaction ID": st.column_config.TextColumn("Transaction ID", help="Locked text digits")
         }
     )
