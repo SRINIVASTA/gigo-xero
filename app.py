@@ -292,14 +292,19 @@ if df_master is not None:
     # Moving this block inside the 'if' statement fixes your NameError completely!
     st.subheader("📝 Live Spreadsheet View Explorer")
     
-    # Enforcing TextColumn config acts exactly like your <td> markup tags, blocking browser rounding errors
+    # 🚀 THE BULLETPROOF INGESTION GUARD:
+    # Explicitly enforce clean text string types right before rendering onto the screen
+    df_final['Transaction ID'] = df_final['Transaction ID'].astype(str).str.split('.').str[0].str.strip()
+    
+    # 🚀 THE FRONTEND VIEWPORT SHIELD:
+    # Forces the browser to handle cells strictly as typography characters (exactly like your <td> tags)
     st.dataframe(
         df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
         use_container_width=True,
         column_config={
             "Transaction ID": st.column_config.TextColumn(
                 "Transaction ID", 
-                help="Locked plain text representation of long bank numeric string identifiers"
+                help="Pure static text representation blocking browser data-type coercion"
             )
         }
     )
