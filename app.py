@@ -185,17 +185,17 @@ st.sidebar.caption("✒️ **Created by Srinivasta**")
 st.sidebar.caption("Automated Bookkeeping Data Solutions")
 
 # Pre-initialize master DataFrame
-df_master = None
+# -----------------------------------------------------------------------------
+# 📥 DATA INGESTION ROUTING SECTION
+# -----------------------------------------------------------------------------
+df_master = None  # Crucial baseline instantiation
 
 if data_option == "Option 1: Use Code-Embedded Transactions (20 Live Rows)":
     df_master = pd.DataFrame(embedded_20_transactions)
-    # 🚀 FIX: If Option 1 has 'ID', rename it to 'Transaction ID' to match the schema
     if 'ID' in df_master.columns:
         df_master = df_master.rename(columns={'ID': 'Transaction ID'})
-    
     if 'Transaction ID' in df_master.columns:
         df_master['Transaction ID'] = df_master['Transaction ID'].astype(str).str.strip()
-        
     st.success(f"✅ Active: Running pipeline using your **Hardcoded Built-In Data Pool** ({len(df_master)} rows)")
 
 else:
@@ -205,7 +205,6 @@ else:
     )
     if uploaded_file is not None:
         if uploaded_file.name.endswith('.csv'):
-            # Load forcing text on all header combinations
             df_master = pd.read_csv(uploaded_file, dtype={'ID': str, 'Transaction ID': str})
             st.success(f"📥 Active: Ingested CSV file `{uploaded_file.name}` ({len(df_master)} rows)")
         else:
@@ -219,13 +218,23 @@ else:
             df_master = pd.read_excel(excel_file_object, sheet_name=selected_sheet, dtype={'ID': str, 'Transaction ID': str})
             st.success(f"📥 Active: Processing Worksheet `{selected_sheet}` inside `{uploaded_file.name}` ({len(df_master)} rows)")
 
-        # 🚀 FIX: Automatically standardize any 'ID' header to 'Transaction ID' for uploaded files
         if df_master is not None and 'ID' in df_master.columns:
             df_master = df_master.rename(columns={'ID': 'Transaction ID'})
-        st.error(f"❌ Schema Validation Failed! Active worksheet layout columns must match 'ID' and 'SMS' exactly. Found: {list(df_master.columns)}")
+    else:
+        # 💡 IMPORTANT: If Option 2 is chosen but no file is dropped, show this instead of crashing!
+        st.info("💡 Getting Started: Please drag and drop your banking ledger files into the sidebar panel to calculate metrics.")
+
+# -----------------------------------------------------------------------------
+# 🛡️ THE COMPLETE PROTECTION LAYER WRAPPER
+# Everything below line 225 MUST be nested entirely under this IF condition!
+# -----------------------------------------------------------------------------
+if df_master is not None:
+    if not all(col in df_master.columns for col in ['Transaction ID', 'SMS']):
+        st.error(f"❌ Schema Validation Failed! Layout columns must match 'Transaction ID' and 'SMS'. Found: {list(df_master.columns)}")
         st.info("💡 Recommendation: Check your other sheet variations using the selection dropdown in the sidebar.")
         st.stop()
         
+    # Line 229 is now permanently safe from running on empty data streams!
     df_final = run_unsupervised_accounting_pipeline(df_master)
     
     def extract_currency_float(text):
@@ -235,9 +244,8 @@ else:
     df_confirmed = df_final[df_final['pipeline_status'] == 'CLUSTER_CONFIRMED'].copy()
     df_confirmed['parsed_amount'] = df_confirmed['SMS'].apply(extract_currency_float)
     
-    # 🚀 FIX: Count transaction records using size or format conversion, to prevent metrics errors
     pivot_summary = df_confirmed.groupby('assigned_accounting_category').agg(
-        transaction_count=('ID', 'count'),
+        transaction_count=('Transaction ID', 'count'),
         total_volume_aed=('parsed_amount', 'sum'),
         average_ticket_aed=('parsed_amount', 'mean')
     ).reset_index()
@@ -250,13 +258,12 @@ else:
         formatted_pivot['average_ticket_aed'] = formatted_pivot['average_ticket_aed'].map('AED {:,.2f}'.format)
         st.dataframe(formatted_pivot, use_container_width=True)
         
-        csv_payload = df_final[['ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']].to_csv(index=False)
+        csv_payload = df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']].to_csv(index=False)
         st.download_button("📥 Download Final Verified Ledger Spreadsheet", data=csv_payload, file_name="verified_general_ledger.csv", mime="text/csv")
         
     with col2:
         st.subheader("Data Analytics Distribution Visualizations")
-        # 🚀 FIX: Plot metrics evaluation mapping fix
-        plot_df = pivot_summary[pivot_summary['transaction_count'] > 0].sort_values(by='total_volume_aed', ascending=False)
+        plot_df = pivot_summary[pivot_summary['total_volume_aed'] > 0].sort_values(by='total_volume_aed', ascending=False)
         
         if not plot_df.empty:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
@@ -270,11 +277,10 @@ else:
             st.warning("No numeric monetary values parsed to plot dashboard statistics.")
             
     st.subheader("📝 Live Spreadsheet View Explorer")
-    # 🚀 Ensure 'Transaction ID' is passed into your list view layout array
     st.dataframe(
         df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
         use_container_width=True,
         column_config={
-            "Transaction ID": st.column_config.TextColumn("Transaction ID", help="Locked text digits")
+            "Transaction ID": st.column_config.TextColumn("Transaction ID", help="Pure unformatted text reference code")
         }
     )
