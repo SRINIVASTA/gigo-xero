@@ -208,7 +208,8 @@ else:
             df_master = pd.read_csv(uploaded_file, dtype={'ID': str, 'Transaction ID': str})
             st.success(f"📥 Active: Ingested CSV file `{uploaded_file.name}` ({len(df_master)} rows)")
         else:
-            excel_file_object = pd.ExcelFile(uploaded_file)
+            # 🚀 CHANGE 1: Enforce the 'openpyxl' engine here to stop early numerical processing
+            excel_file_object = pd.ExcelFile(uploaded_file, engine='openpyxl')
             sheet_names = excel_file_object.sheet_names
             
             selected_sheet = st.sidebar.selectbox(
