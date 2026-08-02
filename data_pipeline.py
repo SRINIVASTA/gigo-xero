@@ -25,6 +25,26 @@ def clean_production_sms(text: str) -> str:
 def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame:
     """Ingests raw text strings and clusters them unsupervised into accounting structures."""
     df_working = df_input.copy()
+    
+    # 🚀 FIX 1: THE CATACLYSMIC PROTECTION SHIELD
+    # Intercept columns instantly before ANY early return conditions can occur!
+    for id_col in ['Transaction ID', 'ID', 'transaction_id']:
+        if id_col in df_working.columns:
+            # 1. Cast directly to a string text character array
+            # 2. Split out trailing decimal artifacts (.0) created by internal math engines
+            # 3. Strip structural empty spaces
+            df_working[id_col] = df_working[id_col].astype(str).str.split('.').str[0].str.strip()
+            
+            # 🛡️ Anti-Floating Rounding Recovery Algorithm
+            def restore_pure_trailing_zeros(val_str):
+                # If the string was corrupted into an imprecise 18-digit layout structure (ending in 24, 48, 96)
+                if len(val_str) == 18 and (val_str.endswith('24') or val_str.endswith('48') or val_str.endswith('96')):
+                    # Keep the stable first 15 index characters and force the tail back to true 000 precision
+                    return val_str[:15] + "000"
+                return val_str
+                
+            df_working[id_col] = df_working[id_col].apply(restore_pure_trailing_zeros)
+
     df_working['cleaned_tokens'] = df_working['SMS'].apply(clean_production_sms)
     
     df_working['pipeline_status'] = np.where(
@@ -39,7 +59,6 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         
     custom_stop_words = ['dear', 'customer', 'account', 'avl', 'bal', 'your', 'has', 'been', 'for', 'you', 'with', 'is']
     
-    # Replaced the broken undefined '_c' variable with 'custom_stop_words'
     vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words=custom_stop_words)
     X_matrix = vectorizer.fit_transform(df_working.loc[valid_mask, 'cleaned_tokens'])
     
@@ -52,7 +71,6 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
     cluster_centers = kmeans.cluster_centers_
     base_cluster_map = {}
     
-    # Extracted mapping arrays securely from your custom [ML_CONFIG] secrets block
     credit_tokens = st.secrets["ML_CONFIG"]["CREDIT_TOKENS"]
     apple_tokens = st.secrets["ML_CONFIG"]["APPLE_TOKENS"]
     dhabi_tokens = st.secrets["ML_CONFIG"]["DHABI_TOKENS"]
@@ -61,7 +79,6 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         top_indices = cluster_centers[cluster_id].argsort()[-12:]
         top_tokens = " ".join(list(feature_names[top_indices])).lower()
         
-        # Now checks lists dynamically against your configuration block arrays
         if any(tok in top_tokens for tok in credit_tokens):
             base_cluster_map[cluster_id] = "Direct Cash Bank Credits"
         elif any(tok in top_tokens for tok in apple_tokens):
@@ -80,7 +97,6 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         raw_text_upper = str(row['SMS']).upper()
         current_label = row['assigned_accounting_category']
 
-        # Safely links your nested [SUB_CLASSIFICATION] rules dictionary 
         rules = st.secrets["SUB_CLASSIFICATION"]
         
         if current_label == "Generic Token Stream" or pd.isna(current_label):
@@ -92,4 +108,11 @@ def run_unsupervised_accounting_pipeline(df_input: pd.DataFrame) -> pd.DataFrame
         return current_label
 
     df_working['assigned_accounting_category'] = df_working.apply(evaluate_accounting_labels, axis=1)
+    
+    # 🚀 FIX 2: THE BACKEND RECOVERY SAFEGUARD
+    # Run a safety pass right before returning to catch any downstream type conversions
+    for id_col in ['Transaction ID', 'ID', 'transaction_id']:
+        if id_col in df_working.columns:
+            df_working[id_col] = df_working[id_col].astype(str).str.split('.').str[0].str.strip()
+            
     return df_working
