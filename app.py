@@ -184,23 +184,28 @@ st.sidebar.markdown("---")
 st.sidebar.caption("✒️ **Created by Srinivasta**")
 st.sidebar.caption("Automated Bookkeeping Data Solutions")
 
+# Pre-initialize master DataFrame
 df_master = None
 
 if data_option == "Option 1: Use Code-Embedded Transactions (20 Live Rows)":
     df_master = pd.DataFrame(embedded_20_transactions)
-    # 🚀 FIX: Force embedded hardcoded rows to cast to text immediately upon dataframe creation
+    # 🚀 FIX: If Option 1 has 'ID', rename it to 'Transaction ID' to match the schema
     if 'ID' in df_master.columns:
-        df_master['ID'] = df_master['ID'].astype(str)
+        df_master = df_master.rename(columns={'ID': 'Transaction ID'})
+    
+    if 'Transaction ID' in df_master.columns:
+        df_master['Transaction ID'] = df_master['Transaction ID'].astype(str).str.strip()
         
     st.success(f"✅ Active: Running pipeline using your **Hardcoded Built-In Data Pool** ({len(df_master)} rows)")
+
 else:
     uploaded_file = st.sidebar.file_uploader(
-        'Upload your custom transaction spreadsheet from [Kaggle Dataset](https://www.kaggle.com/datasets/engreemali/bank-transactions-sms-datasetss):', 
+        'Upload your custom transaction spreadsheet from [Kaggle Dataset](https://kaggle.com):', 
         type=["xlsx", "xls", "csv"]
     )
     if uploaded_file is not None:
         if uploaded_file.name.endswith('.csv'):
-            # 🚀 FIXED: Maps both header variants to string type text data
+            # Load forcing text on all header combinations
             df_master = pd.read_csv(uploaded_file, dtype={'ID': str, 'Transaction ID': str})
             st.success(f"📥 Active: Ingested CSV file `{uploaded_file.name}` ({len(df_master)} rows)")
         else:
@@ -211,18 +216,12 @@ else:
                 f"📄 Select worksheet to process ({len(sheet_names)} found):",
                 sheet_names
             )
-            # 🚀 FIXED: Changed target from 'uploaded_file' to 'excel_file_object' 
-            # 🚀 FIXED: Enforces string rule on 'Transaction ID' explicitly to lock precision
-            df_master = pd.read_excel(
-                excel_file_object, 
-                sheet_name=selected_sheet, 
-                dtype={'ID': str, 'Transaction ID': str}
-            )
+            df_master = pd.read_excel(excel_file_object, sheet_name=selected_sheet, dtype={'ID': str, 'Transaction ID': str})
             st.success(f"📥 Active: Processing Worksheet `{selected_sheet}` inside `{uploaded_file.name}` ({len(df_master)} rows)")
 
-# Execute engine calculations only if data frames are populated
-if df_master is not None:
-    if not all(col in df_master.columns for col in ['ID', 'SMS']):
+        # 🚀 FIX: Automatically standardize any 'ID' header to 'Transaction ID' for uploaded files
+        if df_master is not None and 'ID' in df_master.columns:
+            df_master = df_master.rename(columns={'ID': 'Transaction ID'})
         st.error(f"❌ Schema Validation Failed! Active worksheet layout columns must match 'ID' and 'SMS' exactly. Found: {list(df_master.columns)}")
         st.info("💡 Recommendation: Check your other sheet variations using the selection dropdown in the sidebar.")
         st.stop()
