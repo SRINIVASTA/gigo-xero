@@ -278,10 +278,10 @@ if df_master is not None:
             st.warning("No numeric monetary values parsed to plot dashboard statistics.")
             
     st.subheader("📝 Live Spreadsheet View Explorer")
-    st.dataframe(
-        df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
-        use_container_width=True,
-        column_config={
-            "Transaction ID": st.column_config.TextColumn("Transaction ID", help="Pure unformatted text reference code")
-        }
-    )
+st.dataframe(
+    df_final[['Transaction ID', 'SMS', 'assigned_accounting_category', 'pipeline_status']], 
+    use_container_width=True,
+    column_config={
+        "Transaction ID": st.column_config.TextColumn("Transaction ID", help="Pure unformatted text reference code")
+    }
+)
