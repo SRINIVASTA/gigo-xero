@@ -224,7 +224,7 @@ else:
                 uploaded_file, 
                 sheet_name=selected_sheet, 
                 engine='openpyxl',
-                dtype={'ID': str, 'Transaction ID': str}
+                converters={'Transaction ID': str, 'ID': str} # 🚀 Using 'converters' forces text formatting at the byte level
             )
             st.success(f"📥 Active: Processing Worksheet `{selected_sheet}` inside `{uploaded_file.name}` ({len(df_master)} rows)")
 
