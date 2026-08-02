@@ -254,8 +254,10 @@ if df_master is not None:
     df_confirmed = df_final[df_final['pipeline_status'] == 'CLUSTER_CONFIRMED'].copy()
     df_confirmed['parsed_amount'] = df_confirmed['SMS'].apply(extract_currency_float)
     
+    # 🚀 FIXED: Count using 'pipeline_status' instead of 'Transaction ID'
+    # This prevents Pandas from running an implicit numeric coercion on your IDs!
     pivot_summary = df_confirmed.groupby('assigned_accounting_category').agg(
-        transaction_count=('Transaction ID', 'count'),
+        transaction_count=('pipeline_status', 'count'), 
         total_volume_aed=('parsed_amount', 'sum'),
         average_ticket_aed=('parsed_amount', 'mean')
     ).reset_index()
