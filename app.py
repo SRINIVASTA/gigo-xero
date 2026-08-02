@@ -208,7 +208,7 @@ else:
             df_master = pd.read_csv(uploaded_file, dtype={'ID': str, 'Transaction ID': str})
             st.success(f"📥 Active: Ingested CSV file `{uploaded_file.name}` ({len(df_master)} rows)")
         else:
-            # 🚀 CHANGE 1: Enforce the 'openpyxl' engine here to stop early numerical processing
+            # This step safely pulls the sheet list names out from the file structure layout
             excel_file_object = pd.ExcelFile(uploaded_file, engine='openpyxl')
             sheet_names = excel_file_object.sheet_names
             
@@ -216,7 +216,16 @@ else:
                 f"📄 Select worksheet to process ({len(sheet_names)} found):",
                 sheet_names
             )
-            df_master = pd.read_excel(excel_file_object, sheet_name=selected_sheet, dtype={'ID': str, 'Transaction ID': str})
+            
+            # 🚀 THE HARMONIZATION FIX: 
+            # 1. Change target from 'excel_file_object' back to 'uploaded_file'
+            # 2. Add engine='openpyxl' explicitly to this line so it strictly processes text
+            df_master = pd.read_excel(
+                uploaded_file, 
+                sheet_name=selected_sheet, 
+                engine='openpyxl',
+                dtype={'ID': str, 'Transaction ID': str}
+            )
             st.success(f"📥 Active: Processing Worksheet `{selected_sheet}` inside `{uploaded_file.name}` ({len(df_master)} rows)")
 
         if df_master is not None and 'ID' in df_master.columns:
