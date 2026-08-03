@@ -78,6 +78,8 @@ To bypass validation errors during custom document file parsing, your uploaded s
 | `574063879905315003` | `Dear Customer, ATM Cash Withdrawal for AED 100.00 was debited.` |
 
 *Note: Any blank rows trailing below your data grids inside sheet ranges are automatically detected, filtered out, and logged as system-rejected anomaly rows.*
+## 📄 License & Copyright
+
 > ⚠️ **IMPORTANT COPYRIGHT NOTICE**
 > 
 > **All Rights Reserved © 2026 T A Srinivas.**
@@ -91,4 +93,4 @@ To bypass validation errors during custom document file parsing, your uploaded s
 - [![Kaggle](https://img.shields.io/badge/Kaggle-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white)](https://www.kaggle.com/srinivasta)  
 - [![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:tasrinivass@gmail.com)  
 - [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/srinivasta)
-- [![Website](https://img.shields.io/badge/Website-000000?style=for-the-badge&logo=website&logoColor=white)](https://srinivasta/github.io)
+- [![Website](https://img.shields.io/badge/Website-000000?style=for-the-badge&logo=website&logoColor=white)](https://srinivasta.github.io)
