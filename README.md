@@ -64,18 +64,6 @@ Follow these commands to test your application workspace on your desktop machine
    streamlit run app.py
    ```
 
----
-
-## ☁️ How to Deploy Securely to Streamlit Cloud
-
-1. Commit and push your code files (`app.py`, `data_pipeline.py`, and `requirements.txt`) up to your public **GitHub repository**.
-2. Visit [share.streamlit.io](https://gigo-xero-zxeczpkv4wbafsntchzm72.streamlit.app/) and link your developer profile.
-3. Click the **"New app"** indicator button panel.
-4. Select your newly created bookkeeping code repository name, set the production branch to `main`, and type **`app.py`** in your main file path row.
-5. Click **"Deploy!"** 🚀
-
----
-
 ## 📝 Required Input Spreadsheet Layout Schema
 
 To bypass validation errors during custom document file parsing, your uploaded spreadsheet columns must match these layout headers precisely:
